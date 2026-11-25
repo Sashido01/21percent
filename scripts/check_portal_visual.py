@@ -105,19 +105,48 @@ def diff_pct(a,b):
     aa,bb=a[2],b[2]
     return round(100*sum(aa[i:i+3]!=bb[i:i+3] for i in range(0,len(aa),3))/(a[0]*a[1]),4)
 
+def prepare_capture_site(source, destination):
+    """Use a test-only document to scroll after modules and layout are ready."""
+    shutil.copytree(source,destination)
+    html=(destination/"index.html").read_text(encoding="utf-8")
+    fixture="""<style>html{scroll-behavior:auto!important}*,*::before,*::after{animation:none!important;transition:none!important}</style>
+<script>
+window.addEventListener('load',()=>{
+  const id=new URLSearchParams(location.search).get('view');
+  const target=id&&document.getElementById(id);
+  function position(){
+    const top=target?target.getBoundingClientRect().top+window.scrollY-90:0;
+    window.scrollTo({top:Math.max(0,top),behavior:'instant'});
+  }
+  position();setTimeout(position,150);setTimeout(position,700);
+},{once:true});
+</script>"""
+    (destination/"capture.html").write_text(html.replace("</body>",fixture+"</body>"),encoding="utf-8")
+    return destination
+
 def capture(chrome,url,dest,w,h,profile):
-    proc=subprocess.run([
-        chrome,"--headless","--no-sandbox","--disable-dev-shm-usage",
-        "--disable-background-networking","--no-first-run","--hide-scrollbars",
-        "--force-device-scale-factor=1","--force-prefers-reduced-motion",
-        "--user-data-dir="+str(profile),"--window-size="+str(w)+","+str(h),
-        "--virtual-time-budget=3000","--screenshot="+str(dest),url,
-    ],capture_output=True,text=True,timeout=45)
-    ensure(proc.returncode==0 and dest.is_file(),f"Chrome screenshot failed: {proc.stderr[-1200:]}")
-    image=read_png(dest)
-    ensure(image[:2]==(w,h),f"Unexpected screenshot dimensions: {dest.name} {image[:2]}")
-    ensure(len(set(image[2]))>=16,f"Blank or nearly uniform screenshot: {dest.name}")
-    return image
+    last_error=None
+    for attempt in range(1,4):
+        dest.unlink(missing_ok=True)
+        proc=subprocess.run([
+            chrome,"--headless","--no-sandbox","--disable-dev-shm-usage",
+            "--disable-background-networking","--no-first-run","--hide-scrollbars",
+            "--force-device-scale-factor=1","--force-prefers-reduced-motion",
+            "--run-all-compositor-stages-before-draw",
+            "--user-data-dir="+str(profile)+"-"+str(attempt),
+            "--window-size="+str(w)+","+str(h),
+            "--virtual-time-budget=5000","--screenshot="+str(dest),url,
+        ],capture_output=True,text=True,timeout=45)
+        try:
+            ensure(proc.returncode==0 and dest.is_file(),f"Chrome screenshot failed: {proc.stderr[-1200:]}")
+            image=read_png(dest)
+            ensure(image[:2]==(w,h),f"Unexpected screenshot dimensions: {dest.name} {image[:2]}")
+            ensure(len(set(image[2]))>=16,f"Blank or nearly uniform screenshot: {dest.name}")
+            return image
+        except (RuntimeError, OSError, ValueError, zlib.error) as exc:
+            last_error=exc
+            print(f"Capture attempt {attempt}/3 failed: {exc}",flush=True)
+    raise RuntimeError(f"All capture attempts failed: {dest.name}") from last_error
 
 def main():
     parser=argparse.ArgumentParser()
@@ -143,16 +172,17 @@ def main():
                 for member in tar.getmembers():
                     ensure(not member.issym() and not member.islnk() and (baseline/member.name).resolve().is_relative_to(baseline),"Unsafe baseline archive")
                 tar.extractall(baseline,filter="data")
-            base_dir=baseline/"docs"
-        with serve(ROOT/"docs") as current_url:
+            base_dir=prepare_capture_site(baseline/"docs",tmp/"baseline-capture")
+        current_dir=prepare_capture_site(ROOT/"docs",tmp/"current-capture")
+        with serve(current_dir) as current_url:
             for name,w,h,anchor in VIEWS:
                 path=out/(name+".png")
-                current=capture(chrome,current_url+anchor,path,w,h,tmp/("profile-"+name))
+                current=capture(chrome,current_url+'capture.html?view='+anchor.lstrip('#'),path,w,h,tmp/("profile-"+name))
                 record={"view":name,"width":w,"height":h,"sha256":hashlib.sha256(path.read_bytes()).hexdigest()}
                 if base_dir:
                     with serve(base_dir) as old_url:
                         previous_path=out/("baseline-"+name+".png")
-                        previous=capture(chrome,old_url+anchor,previous_path,w,h,tmp/("baseline-"+name))
+                        previous=capture(chrome,old_url+'capture.html?view='+anchor.lstrip('#'),previous_path,w,h,tmp/("baseline-"+name))
                     record["changed_pixels_percent"]=diff_pct(current,previous)
                 report["views"].append(record)
                 print(name,record,flush=True)
