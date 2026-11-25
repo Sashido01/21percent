@@ -28,7 +28,8 @@
    <p class="hero-desc">Исследуем экономику, разбираем реальные вопросы, учимся считать и создаём полезные проекты вместе.</p>
    <div class="actions"><a class="button primary" href="#practice">Начать с практики <span aria-hidden="true">↗</span></a><a class="button secondary" href="#research">Открыть библиотеку <span aria-hidden="true">↓</span></a></div>
   </div>
-  <div class="hero-map">
+  <div class="map-stack">
+  <div class="hero-map" id="signal-map" data-module="research">
    <div class="map-head"><span>01 / FIELD OF INQUIRY</span><span>СХЕМА</span></div>
    <svg class="map-art" viewBox="0 0 580 480" role="img" aria-labelledby="map-title map-desc">
     <title id="map-title">Исследовательское ядро 21%</title><desc id="map-desc">Абстрактная сфера, четыре узла и орбитальные траектории. Не рыночные данные.</desc>
@@ -46,20 +47,26 @@
     <g transform="rotate(35 290 240)"><ellipse cx="290" cy="240" rx="202" ry="112" fill="none" stroke="#80bac6" stroke-dasharray="3 7" stroke-opacity=".72"/><circle cx="118" cy="299" r="4" fill="#80bac6"/></g>
     <g class="orbital" fill="#c7f65a"><circle cx="290" cy="57" r="5"/><circle cx="290" cy="57" r="12" fill="none" stroke="#c7f65a" opacity=".4"/><path d="M290 57A183 183 0 0 1 473 240" fill="none" stroke="#c7f65a" stroke-width="2" stroke-dasharray="32 256"/></g>
     <g fill="#071116" stroke="#c7f65a"><circle cx="290" cy="33" r="5"/><circle cx="497" cy="240" r="5"/><circle cx="290" cy="447" r="5"/><circle cx="83" cy="240" r="5"/></g>
+    <g class="core-routes" fill="none" aria-hidden="true"><path class="core-route" data-route="research" d="M290 240L112 102"/><path class="core-route" data-route="practice" d="M290 240L480 155"/><path class="core-route" data-route="projects" d="M290 240L475 355"/><path class="core-route" data-route="community" d="M290 240L108 375"/></g>
     <g font-family="Arial,sans-serif" text-anchor="middle"><rect x="213" y="205" width="154" height="70" rx="8" fill="#071116" fill-opacity=".9" stroke="#45616a"/><text x="290" y="248" font-size="41" font-weight="800" fill="#f3f5f2">21<tspan fill="#c7f65a">%</tspan></text><text x="290" y="265" font-size="9" fill="#b0c2c2" letter-spacing="3">KNOW / TEST / BUILD</text></g>
    </svg>
-   <a class="node n1" href="#research"><b>01</b> Исследовать</a>
-   <a class="node n2" href="#practice"><b>02</b> Рассчитать</a>
-   <a class="node n3" href="#projects"><b>03</b> Создать</a>
-   <a class="node n4" href="#community"><b>04</b> Обсудить</a>
+   <a class="node n1" href="#research" data-module-select="research"><b>01</b> Исследовать</a>
+   <a class="node n2" href="#practice" data-module-select="practice"><b>02</b> Рассчитать</a>
+   <a class="node n3" href="#projects" data-module-select="projects"><b>03</b> Создать</a>
+   <a class="node n4" href="#community" data-module-select="community"><b>04</b> Обсудить</a>
    <div class="map-foot"><span>ДЕКОРАТИВНАЯ ВИЗУАЛИЗАЦИЯ</span><button id="motion-toggle" class="motion" type="button" aria-pressed="false" hidden>Приостановить движение</button></div>
   </div>
+  <div class="core-preview" id="core-preview" hidden>
+    <div class="core-preview-copy" aria-live="polite"><p class="micro" id="core-label">RESEARCH / 01</p><h2 id="core-title">Исследования</h2><p id="core-desc">Факты, первоисточники и проверяемые финансовые гипотезы.</p></div>
+    <a class="core-enter" id="core-enter" href="#research">Открыть библиотеку <span aria-hidden="true">↗</span></a>
+  </div>
+ </div>
  </section>
  <div class="index-strip" aria-label="О платформе">
   <div><span class="micro">01 / БИБЛИОТЕКА</span><strong id="resource-count">Материалы</strong></div>
   <div><span class="micro">02 / ПРАКТИКУМ</span><strong>2 калькулятора</strong></div>
   <div><span class="micro">03 / ИНИЦИАТИВЫ</span><strong id="project-count">Каталог</strong></div>
-  <div><span class="micro">04 / ВЕРСИЯ</span><strong id="version">0.0.7</strong></div>
+  <div><span class="micro">04 / ВЕРСИЯ</span><strong id="version">0.0.8</strong></div>
  </div>
  <section id="research" class="section" aria-labelledby="research-title">
   <div class="section-head"><div><p class="eyebrow">01 / RESEARCH</p><h2 id="research-title">Библиотека решений</h2><p class="sub">Не лента обещаний, а инструменты для самостоятельной проверки.</p></div><a class="text-link" href="https://github.com/Sashido01/21percent/tree/main/research">Раздел на GitHub ↗</a></div>

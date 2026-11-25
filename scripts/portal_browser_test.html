@@ -7,6 +7,12 @@ async function run(){
  for(let i=0;i<40&&$('library-controls').hidden;i++)await tick();
  check(!$('library-controls').hidden,'app initialized');
  check($('resource-grid').children.length===6,'initial library');
+ check(!$('core-preview').hidden&&$('signal-map').dataset.module==='research','core initial');
+ const core=d.querySelectorAll('button[data-module]');check(core.length===4,'core buttons');
+ core[1].click();check($('signal-map').dataset.module==='practice'&&core[1].getAttribute('aria-pressed')==='true'&&core[0].getAttribute('aria-pressed')==='false','core selection');
+ check($('core-title').textContent==='Практикум'&&$('core-enter').getAttribute('href')==='#practice','core preview');
+ $('core-enter').click();check(w.location.hash==='#practice','core link');
+ core[2].click();check($('core-enter').getAttribute('href')==='#projects','projects preview');
  $('search').value='инфляции';$('search').dispatchEvent(new w.Event('input',{bubbles:true}));
  check($('resource-grid').children.length===1&&$('resource-grid').textContent.includes('инфляции'),'search');
  d.querySelector('[data-filter="research"]').click();check($('resource-grid').textContent.includes('Ничего не найдено'),'filter empty');
@@ -18,7 +24,7 @@ async function run(){
  check($('reserve-months').textContent.includes('1,33'),'reserve initial');
  $('shock').value='120000';$('shock').dispatchEvent(new w.Event('input',{bubbles:true}));check($('reserve-months').textContent.startsWith('0')&&$('reserve-gap').textContent.includes('30'),'reserve deficit');
  if(!$('motion-toggle').disabled){const previous=d.documentElement.dataset.motion;$('motion-toggle').click();check(d.documentElement.dataset.motion!==previous,'motion toggle');}
- d.querySelector('a[href="#practice"]').click();check(w.location.hash==='#practice','navigation');
+ d.querySelector('a[href="#practice"]').click();check(w.location.hash==='#practice','navigation');check(d.querySelector('.nav a[href="#practice"]').getAttribute('aria-current')==='location','active nav');
  check(d.documentElement.scrollWidth<=frame.clientWidth+2,'desktop overflow');
  frame.width='360';await tick();await tick();check(d.documentElement.scrollWidth<=frame.clientWidth+2,'mobile overflow');
  frame.width='320';await tick();await tick();check(d.documentElement.scrollWidth<=frame.clientWidth+2,'narrow mobile overflow');
