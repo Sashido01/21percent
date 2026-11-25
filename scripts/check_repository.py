@@ -21,6 +21,10 @@ REQUIRED = {
     "assets/brand/experiments.svg", "assets/brand/community.svg",
     ".github/workflows/quality.yml", "scripts/build_signal_motion.mjs",
     "assets/brand/signal-motion.gif",
+    "docs/index.html", "docs/.nojekyll", "docs/PORTAL.md",
+    "docs/portal/style.css", "docs/portal/content.mjs", "docs/portal/calculations.mjs",
+    "docs/portal/app.mjs", "docs/portal/icon.svg", "scripts/portal.test.mjs",
+    "scripts/check_portal_browser.py", "scripts/portal_browser_test.html",
 }
 LINKS = re.compile(r'\]\(([^)\s]+)\)|\b(?:src|href)="([^"]+)"')
 ERRORS = []

@@ -8,7 +8,7 @@
 
 [Открыть анимацию отдельно](assets/brand/signal-motion.gif)
 
-[О клубе](docs/ABOUT.md) · [Участие](CONTRIBUTING.md) · [Обсуждения](https://github.com/Sashido01/21percent/discussions) · [Дорожная карта](ROADMAP.md)
+[О клубе](docs/ABOUT.md) · [Участие](CONTRIBUTING.md) · [Обсуждения](https://github.com/Sashido01/21percent/discussions) · [Дорожная карта](ROADMAP.md) · [Портал: статус публикации](docs/PORTAL.md)
 
 [![Проверки репозитория](https://github.com/Sashido01/21percent/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/Sashido01/21percent/actions/workflows/quality.yml) · [Текущая версия](VERSION) · [История изменений](CHANGELOG.md)
 

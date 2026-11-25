@@ -2,6 +2,7 @@
 
 - [О клубе](ABOUT.md)
 - [Визуальная система](DESIGN.md)
+- [Портал SIGNAL ROOM и публикация](PORTAL.md)
 - [Правила публикации и источников](PUBLISHING.md)
 - [Версионность](VERSIONING.md)
 - [Дорожная карта](../ROADMAP.md)
