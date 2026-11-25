@@ -22,6 +22,7 @@ REQUIRED = {
     ".github/workflows/quality.yml", "scripts/build_signal_motion.mjs",
     "assets/brand/signal-motion.gif",
     "docs/index.html", "docs/.nojekyll", "docs/PORTAL.md",
+    "scripts/check_public_portal.py", ".github/workflows/portal-public.yml",
     "docs/portal/style.css", "docs/portal/content.mjs", "docs/portal/calculations.mjs",
     "docs/portal/app.mjs", "docs/portal/icon.svg", "scripts/portal.test.mjs",
     "scripts/check_portal_browser.py", "scripts/portal_browser_test.html",
