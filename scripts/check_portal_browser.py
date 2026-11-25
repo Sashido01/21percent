@@ -28,10 +28,10 @@ with tempfile.TemporaryDirectory() as tmp:
             chrome, "--headless", "--no-sandbox", "--disable-dev-shm-usage",
             "--disable-background-networking", "--no-first-run",
             "--user-data-dir=" + str(Path(tmp) / "chrome"),
-            "--window-size=1400,1100", "--virtual-time-budget=15000", "--dump-dom",
+            "--window-size=1600,1100", "--force-prefers-reduced-motion", "--virtual-time-budget=15000", "--dump-dom",
             f"http://127.0.0.1:{server.server_port}/browser-test.html",
         ], capture_output=True, text=True, timeout=60)
-        marker = "PASS: portal browser interactions, desktop and 360/320px layout"
+        marker = "PASS: portal browser interactions, five-width visual geometry, focus and contrast"
         if proc.returncode or f'<pre id="out">{marker}</pre>' not in proc.stdout:
             print(proc.stdout[:5000])
             print(proc.stderr[-4000:])

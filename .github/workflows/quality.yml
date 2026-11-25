@@ -17,12 +17,13 @@ jobs:
   check:
     name: Documentation and SVG checks
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: Validate repository
         run: python3 scripts/check_repository.py
 
@@ -41,3 +42,16 @@ jobs:
         run: |
           node scripts/build_social_preview.mjs --check
           python3 scripts/check_social_preview.py
+
+      - name: Capture portal visual regression evidence
+        env:
+          BASELINE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: python3 scripts/check_portal_visual.py --out visual-qa --baseline "$BASELINE"
+      - name: Upload screenshots and pixel comparison report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: portal-visual-qa-${{ github.run_id }}
+          path: visual-qa/
+          if-no-files-found: ignore
+          retention-days: 14
