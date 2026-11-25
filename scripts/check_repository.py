@@ -157,7 +157,7 @@ try:
     assert offset == len(gif) - 1 and frames == 40 and len(signatures) == 40
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert readme.count("<details>") == readme.count("</details>") == 9
-    assert readme.count("<summary>") == readme.count("</summary>") == 7
+    assert readme.count("<summary>") == readme.count("</summary>") == 9
     print("PASS: 40 distinct decoded GIF frames, 4.8 seconds; 9 disclosure panels")
 except (AssertionError, IndexError, OSError, ValueError) as exc:
     ERRORS.append(f"Motion or interactive panels invalid: {exc}")
