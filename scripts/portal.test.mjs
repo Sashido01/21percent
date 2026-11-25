@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync,existsSync} from 'node:fs';
+import {VERSION,resources,projects,selectResources} from '../docs/portal/content.mjs';
+import {realReturn,reserveCalc} from '../docs/portal/calculations.mjs';
+const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7);
+test('real return normal case',()=>{const r=realReturn(100000,12,8);near(r.rate,3.7037037037037);near(r.nominalValue,112000);near(r.realValue,103703.7037037);});
+test('real return loss and zero capital',()=>{near(realReturn(10,-100,0).rate,-100);near(realReturn(0,12,8).realValue,0);near(realReturn(100,0,-20).realValue,125);});
+test('real return invalid inputs',()=>{for(const a of [[1,1,-100],[-1,1,1],[1,-101,1],[NaN,1,1],[1,Infinity,1]])assert.throws(()=>realReturn(...a),RangeError);});
+test('reserve baseline',()=>{const r=reserveCalc(60000,45000,90000,30000);near(r.before,2);near(r.months,4/3);near(r.recovery,2);near(r.gap,0);});
+test('reserve deficit and recovery',()=>{const r=reserveCalc(100,80,10,50);near(r.gap,40);near(r.months,0);near(r.recovery,2.5);assert.equal(reserveCalc(80,80,100,10).recovery,null);assert.equal(reserveCalc(0,80,100,0).recovery,0);});
+test('reserve rejects division by zero and invalid input',()=>{assert.throws(()=>reserveCalc(1,0,1,1),RangeError);assert.throws(()=>reserveCalc(1,1,-1,1),RangeError);assert.throws(()=>reserveCalc(1,1,1,NaN),RangeError);});
+test('search and filters',()=>{assert.equal(selectResources('','all').length,resources.length);assert.equal(selectResources('инфляции','practice')[0].id,'real');assert.equal(selectResources('ИНФЛЯЦИИ','research').length,0);assert.equal(selectResources('несуществующий материал').length,0);assert.equal(selectResources('  РЕЗЕРВ  ','practice')[0].id,'reserve');});
+test('version and source paths',()=>{assert.equal(VERSION,readFileSync(new URL('../VERSION',import.meta.url),'utf8').trim());for(const item of [...resources,...projects])assert.ok(existsSync(new URL('../'+item.path,import.meta.url)),item.path);assert.equal(new Set(resources.map(x=>x.id)).size,resources.length);});

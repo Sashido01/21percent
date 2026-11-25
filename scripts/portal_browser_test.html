@@ -1,0 +1,29 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Portal browser test</title><body><pre id="out">RUNNING</pre><iframe id="frame" title="Portal test" width="1280" height="900" src="index.html"></iframe><script>
+const frame=document.getElementById('frame'),out=document.getElementById('out');
+const check=(c,msg)=>{if(!c)throw Error(msg);};
+const tick=()=>new Promise(r=>setTimeout(r,100));
+async function run(){
+ const d=frame.contentDocument,w=frame.contentWindow,$=id=>d.getElementById(id);
+ for(let i=0;i<40&&$('library-controls').hidden;i++)await tick();
+ check(!$('library-controls').hidden,'app initialized');
+ check($('resource-grid').children.length===6,'initial library');
+ $('search').value='инфляции';$('search').dispatchEvent(new w.Event('input',{bubbles:true}));
+ check($('resource-grid').children.length===1&&$('resource-grid').textContent.includes('инфляции'),'search');
+ d.querySelector('[data-filter="research"]').click();check($('resource-grid').textContent.includes('Ничего не найдено'),'filter empty');
+ d.querySelector('[data-filter="all"]').click();$('search').value='';$('search').dispatchEvent(new w.Event('input',{bubbles:true}));
+ check($('real-rate').textContent.includes('3,7'),'real calculator initial');
+ $('nominal').value='0';$('nominal').dispatchEvent(new w.Event('input',{bubbles:true}));check($('real-rate').textContent.includes('-7,41'),'real calculator changed');
+ $('inflation').value='-100';$('inflation').dispatchEvent(new w.Event('input',{bubbles:true}));check(!$('real-error').hidden&&$('real-result').hidden,'invalid input');
+ $('inflation').value='8';$('inflation').dispatchEvent(new w.Event('input',{bubbles:true}));check($('real-error').hidden&&!$('real-result').hidden,'valid input restored');
+ check($('reserve-months').textContent.includes('1,33'),'reserve initial');
+ $('shock').value='120000';$('shock').dispatchEvent(new w.Event('input',{bubbles:true}));check($('reserve-months').textContent.startsWith('0')&&$('reserve-gap').textContent.includes('30'),'reserve deficit');
+ if(!$('motion-toggle').disabled){const previous=d.documentElement.dataset.motion;$('motion-toggle').click();check(d.documentElement.dataset.motion!==previous,'motion toggle');}
+ d.querySelector('a[href="#practice"]').click();check(w.location.hash==='#practice','navigation');
+ check(d.documentElement.scrollWidth<=frame.clientWidth+2,'desktop overflow');
+ frame.width='360';await tick();await tick();check(d.documentElement.scrollWidth<=frame.clientWidth+2,'mobile overflow');
+ frame.width='320';await tick();await tick();check(d.documentElement.scrollWidth<=frame.clientWidth+2,'narrow mobile overflow');
+ check($('project-grid').children.length===6,'project catalog');
+ out.textContent='PASS: portal browser interactions, desktop and 360/320px layout';
+}
+frame.addEventListener('load',()=>run().catch(e=>out.textContent='FAIL: '+e.message),{once:true});
+</script></body></html>
