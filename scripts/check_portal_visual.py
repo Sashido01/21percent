@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """Capture reproducible portal views and compare PR/base pixels in one browser environment."""
 import argparse
+import base64
+import os
+import socket
+import time
+from urllib.parse import urlsplit
+from urllib.request import urlopen
 from contextlib import contextmanager
 import functools
 import hashlib
@@ -105,48 +111,122 @@ def diff_pct(a,b):
     aa,bb=a[2],b[2]
     return round(100*sum(aa[i:i+3]!=bb[i:i+3] for i in range(0,len(aa),3))/(a[0]*a[1]),4)
 
-def prepare_capture_site(source, destination):
-    """Use a test-only document to scroll after modules and layout are ready."""
-    shutil.copytree(source,destination)
-    html=(destination/"index.html").read_text(encoding="utf-8")
-    fixture="""<style>html{scroll-behavior:auto!important}*,*::before,*::after{animation:none!important;transition:none!important}</style>
-<script>
-window.addEventListener('load',()=>{
-  const id=new URLSearchParams(location.search).get('view');
-  const target=id&&document.getElementById(id);
-  function position(){
-    const top=target?target.getBoundingClientRect().top+window.scrollY-90:0;
-    window.scrollTo({top:Math.max(0,top),behavior:'instant'});
-  }
-  position();setTimeout(position,150);setTimeout(position,700);
-},{once:true});
-</script>"""
-    (destination/"capture.html").write_text(html.replace("</body>",fixture+"</body>"),encoding="utf-8")
-    return destination
+class DevTools:
+    """Small local-only RFC6455/CDP client; no network dependencies."""
+    def __init__(self,url):
+        u=urlsplit(url)
+        ensure(u.scheme=="ws" and u.hostname=="127.0.0.1","Unexpected DevTools address")
+        self.sock=socket.create_connection((u.hostname,u.port),timeout=20)
+        self.stream=self.sock.makefile("rb")
+        key=base64.b64encode(os.urandom(16)).decode()
+        req=f"GET {u.path} HTTP/1.1\r\nHost: {u.netloc}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n\r\n"
+        self.sock.sendall(req.encode("ascii"))
+        status=self.stream.readline().decode("ascii")
+        ensure(" 101 " in status,"DevTools handshake failed: "+status)
+        headers={}
+        while True:
+            line=self.stream.readline()
+            if line in (b"\r\n",b""):
+                break
+            k,v=line.decode("ascii").split(":",1)
+            headers[k.lower()]=v.strip()
+        accept=base64.b64encode(hashlib.sha1((key+"258EAFA5-E914-47DA-95CA-C5AB0DC85B11").encode()).digest()).decode()
+        ensure(headers.get("sec-websocket-accept")==accept,"DevTools handshake mismatch")
+        self.seq=0
+    def send(self,payload,opcode=1):
+        n=len(payload)
+        prefix=bytes([0x80|opcode,0x80|(n if n<126 else 126 if n<65536 else 127)])
+        if n>=126:
+            prefix+=struct.pack(">H" if n<65536 else ">Q",n)
+        mask=os.urandom(4)
+        self.sock.sendall(prefix+mask+bytes(v^mask[i%4] for i,v in enumerate(payload)))
+    def read_message(self):
+        chunks=[]
+        while True:
+            a,b=self.stream.read(2)
+            n=b&127
+            if n==126: n=struct.unpack(">H",self.stream.read(2))[0]
+            elif n==127: n=struct.unpack(">Q",self.stream.read(8))[0]
+            ensure(n<40_000_000,"DevTools frame too large")
+            mask=self.stream.read(4) if b&128 else None
+            payload=self.stream.read(n)
+            ensure(len(payload)==n,"Truncated DevTools frame")
+            if mask: payload=bytes(v^mask[i%4] for i,v in enumerate(payload))
+            opcode=a&15
+            if opcode==8: raise RuntimeError("DevTools disconnected")
+            if opcode==9:
+                self.send(payload,10)
+                continue
+            if opcode==10: continue
+            chunks.append(payload)
+            if a&128: return json.loads(b"".join(chunks))
+    def call(self,method,**params):
+        self.seq+=1
+        self.send(json.dumps({"id":self.seq,"method":method,"params":params}).encode())
+        while True:
+            data=self.read_message()
+            if data.get("id")==self.seq:
+                ensure("error" not in data,f"{method}: {data.get('error')}")
+                return data["result"]
+    def evaluate(self,expression):
+        data=self.call("Runtime.evaluate",expression=expression,returnByValue=True,awaitPromise=True)
+        ensure("exceptionDetails" not in data,"JavaScript evaluation failed: "+expression)
+        return data["result"].get("value")
+    def close(self):
+        self.stream.close()
+        self.sock.close()
 
-def capture(chrome,url,dest,w,h,profile):
-    last_error=None
-    for attempt in range(1,4):
-        dest.unlink(missing_ok=True)
-        proc=subprocess.run([
-            chrome,"--headless","--no-sandbox","--disable-dev-shm-usage",
-            "--disable-background-networking","--no-first-run","--hide-scrollbars",
-            "--force-device-scale-factor=1","--force-prefers-reduced-motion",
-            "--run-all-compositor-stages-before-draw",
-            "--user-data-dir="+str(profile)+"-"+str(attempt),
-            "--window-size="+str(w)+","+str(h),
-            "--virtual-time-budget=5000","--screenshot="+str(dest),url,
-        ],capture_output=True,text=True,timeout=45)
-        try:
-            ensure(proc.returncode==0 and dest.is_file(),f"Chrome screenshot failed: {proc.stderr[-1200:]}")
-            image=read_png(dest)
-            ensure(image[:2]==(w,h),f"Unexpected screenshot dimensions: {dest.name} {image[:2]}")
-            ensure(len(set(image[2]))>=16,f"Blank or nearly uniform screenshot: {dest.name}")
-            return image
-        except (RuntimeError, OSError, ValueError, zlib.error) as exc:
-            last_error=exc
-            print(f"Capture attempt {attempt}/3 failed: {exc}",flush=True)
-    raise RuntimeError(f"All capture attempts failed: {dest.name}") from last_error
+def capture(chrome,url,dest,w,h,profile,anchor):
+    profile.mkdir(parents=True,exist_ok=True)
+    proc=subprocess.Popen([
+        chrome,"--headless","--no-sandbox","--disable-dev-shm-usage",
+        "--disable-background-networking","--no-first-run","--hide-scrollbars",
+        "--remote-debugging-port=0","--remote-debugging-address=127.0.0.1",
+        "--user-data-dir="+str(profile),"--window-size="+str(w)+","+str(h),
+        "about:blank",
+    ],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    dev=None
+    try:
+        portfile=profile/"DevToolsActivePort"
+        deadline=time.monotonic()+20
+        while not portfile.is_file() and time.monotonic()<deadline and proc.poll() is None:
+            time.sleep(.1)
+        ensure(portfile.is_file(),"Chrome DevTools port did not appear")
+        port=int(portfile.read_text().splitlines()[0])
+        with urlopen(f"http://127.0.0.1:{port}/json/list",timeout=10) as response:
+            targets=json.load(response)
+        target=next(x for x in targets if x["type"]=="page")
+        dev=DevTools(target["webSocketDebuggerUrl"])
+        dev.call("Page.enable")
+        dev.call("Emulation.setDeviceMetricsOverride",width=w,height=h,deviceScaleFactor=1,mobile=False)
+        dev.call("Emulation.setEmulatedMedia",features=[{"name":"prefers-reduced-motion","value":"reduce"}])
+        dev.call("Page.navigate",url=url)
+        deadline=time.monotonic()+20
+        ready=False
+        while time.monotonic()<deadline:
+            ready=dev.evaluate("document.readyState==='complete' && !!document.querySelector('#resource-grid .reader-open') && document.querySelector('#resource-grid').children.length===6")
+            if ready: break
+            time.sleep(.15)
+        ensure(ready,"Portal did not initialize before screenshot")
+        selector=json.dumps(anchor.lstrip("#"))
+        location=dev.evaluate("""(async()=>{const id="""+selector+""";const e=id?document.getElementById(id):null;if(id&&!e)throw Error('Missing section');await document.fonts.ready;document.documentElement.style.scrollBehavior='auto';window.scrollTo(0,e?Math.max(0,e.getBoundingClientRect().top+window.scrollY-90):0);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));return {top:e?e.getBoundingClientRect().top:0,scroll:window.scrollY,viewport:window.innerHeight,visible:e?e.getBoundingClientRect().bottom>0:true};})()""")
+        ensure(location["visible"] and -100<=location["top"]<h,f"Wrong section position: {anchor} {location}")
+        time.sleep(.25)
+        shot=dev.call("Page.captureScreenshot",format="png",fromSurface=True,captureBeyondViewport=False)
+        dest.write_bytes(base64.b64decode(shot["data"],validate=True))
+        image=read_png(dest)
+        ensure(image[:2]==(w,h),f"Unexpected screenshot dimensions: {dest.name} {image[:2]}")
+        sample={image[2][i:i+3] for i in range(0,len(image[2]),3*31)}
+        ensure(len(sample)>20,f"Blank or nearly uniform screenshot: {dest.name}")
+        print(f"Captured {dest.name}: {location}",flush=True)
+        return image
+    finally:
+        if dev: dev.close()
+        proc.terminate()
+        try: proc.wait(timeout=8)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
 
 def main():
     parser=argparse.ArgumentParser()
@@ -172,17 +252,16 @@ def main():
                 for member in tar.getmembers():
                     ensure(not member.issym() and not member.islnk() and (baseline/member.name).resolve().is_relative_to(baseline),"Unsafe baseline archive")
                 tar.extractall(baseline,filter="data")
-            base_dir=prepare_capture_site(baseline/"docs",tmp/"baseline-capture")
-        current_dir=prepare_capture_site(ROOT/"docs",tmp/"current-capture")
-        with serve(current_dir) as current_url:
+            base_dir=baseline/"docs"
+        with serve(ROOT/"docs") as current_url:
             for name,w,h,anchor in VIEWS:
                 path=out/(name+".png")
-                current=capture(chrome,current_url+'capture.html?view='+anchor.lstrip('#'),path,w,h,tmp/("profile-"+name))
+                current=capture(chrome,current_url,path,w,h,tmp/("profile-"+name),anchor)
                 record={"view":name,"width":w,"height":h,"sha256":hashlib.sha256(path.read_bytes()).hexdigest()}
                 if base_dir:
                     with serve(base_dir) as old_url:
                         previous_path=out/("baseline-"+name+".png")
-                        previous=capture(chrome,old_url+'capture.html?view='+anchor.lstrip('#'),previous_path,w,h,tmp/("baseline-"+name))
+                        previous=capture(chrome,old_url,previous_path,w,h,tmp/("baseline-"+name),anchor)
                     record["changed_pixels_percent"]=diff_pct(current,previous)
                 report["views"].append(record)
                 print(name,record,flush=True)
