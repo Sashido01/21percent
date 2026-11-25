@@ -1,39 +1,36 @@
 <div align="center">
 
-<img src="assets/brand/hero.svg" alt="21% — Финансовый клуб Школы 21. Финансы как практика, проверка и совместное исследование." width="100%">
+<a href="https://sashido01.github.io/21percent/"><img src="assets/brand/hero.svg" alt="21% — Финансовый клуб Школы 21. Открыть SIGNAL ROOM." width="100%"></a>
 
-<img src="assets/brand/signal-motion.gif" width="100%" alt="Декоративный сигнал проходит четыре направления клуба: исследования, практика, эксперименты, сообщество.">
+<a href="https://sashido01.github.io/21percent/"><img src="assets/brand/portal-entry.svg" alt="Войти в SIGNAL ROOM — библиотека, калькуляторы и проекты" width="100%"></a>
 
-**Финансовая грамотность через практику, а не обещания.**
-
-**[Войти в SIGNAL ROOM — интерактивный портал клуба ↗](https://sashido01.github.io/21percent/)**
-
-Библиотека с поиском · финансовые калькуляторы · карта инициатив.
-
-[Открыть анимацию отдельно](assets/brand/signal-motion.gif)
-
-[О клубе](docs/ABOUT.md) · [Участие](CONTRIBUTING.md) · [Обсуждения](https://github.com/Sashido01/21percent/discussions) · [Дорожная карта](ROADMAP.md) · [Портал: документация](docs/PORTAL.md)
-
-[![Проверки репозитория](https://github.com/Sashido01/21percent/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/Sashido01/21percent/actions/workflows/quality.yml) · [Текущая версия](VERSION) · [История изменений](CHANGELOG.md)
+**[Открыть интерактивный портал ↗](https://sashido01.github.io/21percent/)** · [О клубе](docs/ABOUT.md) · [Как участвовать](CONTRIBUTING.md)
 
 </div>
 
 ## 01 / Выберите направление
 
 <div align="center">
-
-<a href="research/README.md"><img src="assets/brand/research.svg" alt="Исследования — открыть методику и материалы" width="49%"></a>
-<a href="practice/README.md"><img src="assets/brand/practice.svg" alt="Практикум — открыть учебные кейсы" width="49%"></a>
-<a href="projects/README.md"><img src="assets/brand/experiments.svg" alt="Эксперименты — открыть каталог инициатив" width="49%"></a>
-<a href="events/README.md"><img src="assets/brand/community.svg" alt="Сообщество — открыть встречи клуба" width="49%"></a>
-
+<a href="research/README.md"><img src="assets/brand/research.svg" alt="Исследования — открыть раздел" width="360"></a>
+<a href="practice/README.md"><img src="assets/brand/practice.svg" alt="Практикум — открыть раздел" width="360"></a>
+<a href="projects/README.md"><img src="assets/brand/experiments.svg" alt="Эксперименты — открыть раздел" width="360"></a>
+<a href="events/README.md"><img src="assets/brand/community.svg" alt="Сообщество — открыть раздел" width="360"></a>
 </div>
 
 [Исследования](research/README.md) · [Практикум](practice/README.md) · [Эксперименты](projects/README.md) · [Сообщество](events/README.md)
 
+<details>
+<summary>Сигнал / анимация движения между направлениями</summary>
+
+<img src="assets/brand/signal-motion.gif" width="100%" alt="Декоративный сигнал проходит четыре направления клуба.">
+
+[Открыть анимацию отдельно](assets/brand/signal-motion.gif)
+
+</details>
+
 ## 02 / Интерактивная лаборатория
 
-Выберите сценарий — панели раскрываются прямо на этой странице.
+Выберите сценарий — панели раскрываются прямо здесь. Для полноценного интерактива откройте [портал SIGNAL ROOM](https://sashido01.github.io/21percent/#practice).
 
 <details>
 <summary><strong>01 / Исследователь — проверить финансовую новость</strong></summary>
@@ -92,27 +89,28 @@
 
 </details>
 
-## 03 / Вход в SIGNAL ROOM
+## 03 / Финансы, которые можно проверить
 
-Финансовый клуб 21% — образовательное сообщество Школы 21. Вместе разбираемся в деньгах, экономике, инвестициях и технологиях. Здесь можно принести вопрос, проверить собственную идею, поделиться опытом и сделать полезную вещь вместе.
+Финансовый клуб 21% — образовательное сообщество Школы 21. Исследуем деньги, экономику и технологии; проверяем идеи и создаём полезные проекты вместе.
 
-| Что хотите сделать? | С чего начать |
-| :--- | :--- |
-| Проверить финансовую новость | [Методика исследования](research/METHOD.md) |
-| Разобраться в реальной доходности | [Кейс 01 — инфляция](practice/01-real-return.md) |
-| Проверить финансовую устойчивость | [Кейс 02 — резерв](practice/02-reserve.md) |
-| Предложить тему встречи или проект | [Правила участия](CONTRIBUTING.md) · [Обсуждения](https://github.com/Sashido01/21percent/discussions) |
+- Очные встречи, финансовые обсуждения и разборы инструментов уже проводились.
+- Игры, исследования и совместные инструменты развиваются; реальные стадии — в [каталоге инициатив](projects/README.md).
+- [21% INVEST](projects/INVEST.md) — наблюдение за личным инвестиционным экспериментом организатора, не общий счёт и не управление чужими средствами.
 
-## 04 / Что происходит в клубе
-
-- **Уже было:** очные встречи, финансовые обсуждения, разборы инструментов и голосования по образовательному инвестиционному эксперименту.
-- **В работе и планах:** игровые форматы, исследовательские материалы, финансовые инструменты и технологические проекты. Фактические статусы — в [каталоге инициатив](projects/README.md).
-- **21% INVEST** — наблюдение за личным портфелем организатора и обсуждение решений. Не коллективный портфель, не общий счёт, не управление чужими средствами. [Подробнее](projects/INVEST.md).
-
-## 05 / Открытая лаборатория
-
-[Документация](docs/README.md) · [Правила публикации](docs/PUBLISHING.md) · [Принципы общения](CODE_OF_CONDUCT.md) · [Визуальная система](docs/DESIGN.md)
+[Обсудить идею](https://github.com/Sashido01/21percent/discussions) · [Предложить проект](https://github.com/Sashido01/21percent/issues/new/choose) · [Архив встреч](events/README.md)
 
 <img src="assets/brand/signature.svg" alt="Изучаем. Проверяем. Создаём." width="100%">
 
-**21% — название клуба, а не обещанная доходность.** Материалы образовательные и не являются индивидуальными инвестиционными рекомендациями.
+**21% — название клуба, а не обещанная доходность.** Материалы образовательные, не индивидуальная инвестиционная рекомендация.
+
+---
+
+<details>
+<summary>Репозиторий / версия, проверки и документация</summary>
+
+[![Проверки репозитория](https://github.com/Sashido01/21percent/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/Sashido01/21percent/actions/workflows/quality.yml)
+[![Публичная доступность](https://github.com/Sashido01/21percent/actions/workflows/portal-public.yml/badge.svg?branch=main)](https://github.com/Sashido01/21percent/actions/workflows/portal-public.yml)
+
+[Версия](VERSION) · [История изменений](CHANGELOG.md) · [Дорожная карта](ROADMAP.md) · [Документация](docs/README.md) · [Дизайн](docs/DESIGN.md) · [Публикация](docs/PORTAL.md) · [Правила](docs/PUBLISHING.md) · [Принципы общения](CODE_OF_CONDUCT.md)
+
+</details>
