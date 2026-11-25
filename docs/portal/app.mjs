@@ -32,12 +32,17 @@ $('project-count').textContent=projects.length+' инициатив';
 $('version').textContent=VERSION;
 $('project-grid').replaceChildren(...projects.map(item=>itemCard(item,true)));
 renderLibrary();
+function paintChart(id,items,format,note,outcome){
+ const max=Math.max(1e-12,...items.map(item=>item[1]));
+ for(const [key,value] of items){$(id+'-'+key+'-value').textContent=format(value);$(id+'-'+key+'-bar').style.width=(100*Math.max(0,value)/max)+'%';}
+ const chart=$(id);chart.dataset.outcome=outcome;$(id+'-note').textContent=note;
+}
 function bindCalc(formId,errorId,resultId,calculate){
- const form=$(formId),err=$(errorId),result=$(resultId);
+ const form=$(formId),err=$(errorId),result=$(resultId),chart=$(resultId.replace('-result','-chart'));
  function update(event){
   if(event)event.preventDefault();
-  try{if(!form.checkValidity())throw new RangeError('Проверьте заполнение полей и допустимые диапазоны.');calculate();err.hidden=true;result.hidden=false;}
-  catch(e){result.hidden=true;err.textContent=e instanceof RangeError?e.message:'Не удалось выполнить расчёт.';err.hidden=false;}
+  try{if(!form.checkValidity())throw new RangeError('Проверьте заполнение полей и допустимые диапазоны.');calculate();err.hidden=true;result.hidden=false;chart.hidden=false;}
+  catch(e){result.hidden=true;chart.hidden=true;err.textContent=e instanceof RangeError?e.message:'Не удалось выполнить расчёт.';err.hidden=false;}
  }
  form.noValidate=true;
  form.addEventListener('submit',update);
@@ -47,10 +52,13 @@ function bindCalc(formId,errorId,resultId,calculate){
 bindCalc('real-form','real-error','real-result',()=>{
  const r=realReturn(val('capital'),val('nominal'),val('inflation'));
  $('real-rate').textContent=fmt(r.rate)+'%';$('real-nominal').textContent=rub(r.nominalValue);$('real-value').textContent=rub(r.realValue);$('real-delta').textContent=rub(r.delta);
+ const outcome=r.rate>1e-9?'positive':r.rate<-1e-9?'negative':'neutral';
+ paintChart('real-chart',[['start',val('capital')],['nominal',r.nominalValue],['real',r.realValue]],rub,'Общая шкала сумм. '+(outcome==='positive'?'Покупательная способность выросла.':outcome==='negative'?'Покупательная способность снизилась.':'Покупательная способность не изменилась.'),outcome);
 });
 bindCalc('reserve-form','reserve-error','reserve-result',()=>{
  const r=reserveCalc(val('income'),val('expenses'),val('reserve'),val('shock'));
  $('reserve-months').textContent=fmt(r.months)+' мес.';$('reserve-before').textContent=fmt(r.before)+' мес.';$('reserve-gap').textContent=rub(r.gap);$('reserve-recovery').textContent=r.recovery===null?'Нет свободного остатка':fmt(r.recovery)+' мес.';
+ paintChart('reserve-chart',[['before',r.before],['after',r.months]],value=>fmt(value)+' мес.','Общая шкала месяцев. '+(r.gap>0?'Резерва недостаточно: дефицит '+rub(r.gap)+'.':r.remaining===0?'Резерв исчерпан.':'После расхода осталось '+rub(r.remaining)+'.'),r.gap>0||r.remaining===0?'negative':'neutral');
 });
 const motion=$('motion-toggle'),preference=window.matchMedia('(prefers-reduced-motion: reduce)');
 function motionState(paused){
@@ -90,3 +98,7 @@ function activeSection(){
 for(const link of sectionLinks)link.addEventListener('click',()=>highlightSection(link.hash.slice(1)));
 let scrollPending=false;window.addEventListener('scroll',()=>{if(scrollPending)return;scrollPending=true;requestAnimationFrame(()=>{activeSection();scrollPending=false;});},{passive:true});
 window.addEventListener('hashchange',()=>highlightSection(location.hash.slice(1)));activeSection();
+
+const realScenarios={base:[12,8],inflation:[12,20],loss:[-10,8]};
+$('real-scenarios').hidden=false;
+for(const button of document.querySelectorAll('[data-real-scenario]'))button.addEventListener('click',()=>{const pair=realScenarios[button.dataset.realScenario];$('nominal').value=pair[0];$('inflation').value=pair[1];$('nominal').dispatchEvent(new Event('input',{bubbles:true}));});

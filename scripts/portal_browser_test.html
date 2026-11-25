@@ -18,11 +18,15 @@ async function run(){
  d.querySelector('[data-filter="research"]').click();check($('resource-grid').textContent.includes('Ничего не найдено'),'filter empty');
  d.querySelector('[data-filter="all"]').click();$('search').value='';$('search').dispatchEvent(new w.Event('input',{bubbles:true}));
  check($('real-rate').textContent.includes('3,7'),'real calculator initial');
+ check(!$('real-chart').hidden&&parseFloat($('real-chart-nominal-bar').style.width)===100,'real chart initial');
+ check(parseFloat($('real-chart-real-bar').style.width)<100&&$('real-chart').dataset.outcome==='positive','real chart proportional');
+ d.querySelector('[data-real-scenario="inflation"]').click();check($('inflation').value==='20'&&$('real-chart').dataset.outcome==='negative','inflation scenario');
+ d.querySelector('[data-real-scenario="base"]').click();check($('inflation').value==='8'&&$('nominal').value==='12','base scenario');
  $('nominal').value='0';$('nominal').dispatchEvent(new w.Event('input',{bubbles:true}));check($('real-rate').textContent.includes('-7,41'),'real calculator changed');
- $('inflation').value='-100';$('inflation').dispatchEvent(new w.Event('input',{bubbles:true}));check(!$('real-error').hidden&&$('real-result').hidden,'invalid input');
+ $('inflation').value='-100';$('inflation').dispatchEvent(new w.Event('input',{bubbles:true}));check(!$('real-error').hidden&&$('real-result').hidden&&$('real-chart').hidden,'invalid input');
  $('inflation').value='8';$('inflation').dispatchEvent(new w.Event('input',{bubbles:true}));check($('real-error').hidden&&!$('real-result').hidden,'valid input restored');
- check($('reserve-months').textContent.includes('1,33'),'reserve initial');
- $('shock').value='120000';$('shock').dispatchEvent(new w.Event('input',{bubbles:true}));check($('reserve-months').textContent.startsWith('0')&&$('reserve-gap').textContent.includes('30'),'reserve deficit');
+ check($('reserve-months').textContent.includes('1,33'),'reserve initial');check(!$('reserve-chart').hidden&&parseFloat($('reserve-chart-before-bar').style.width)===100&&parseFloat($('reserve-chart-after-bar').style.width)<100,'reserve chart proportional');
+ $('shock').value='120000';$('shock').dispatchEvent(new w.Event('input',{bubbles:true}));check($('reserve-months').textContent.startsWith('0')&&$('reserve-gap').textContent.includes('30'),'reserve deficit');check(parseFloat($('reserve-chart-after-bar').style.width)===0&&$('reserve-chart').dataset.outcome==='negative','reserve chart deficit');
  if(!$('motion-toggle').disabled){const previous=d.documentElement.dataset.motion;$('motion-toggle').click();check(d.documentElement.dataset.motion!==previous,'motion toggle');}
  d.querySelector('a[href="#practice"]').click();check(w.location.hash==='#practice','navigation');check(d.querySelector('.nav a[href="#practice"]').getAttribute('aria-current')==='location','active nav');
  check(d.documentElement.scrollWidth<=frame.clientWidth+2,'desktop overflow');
