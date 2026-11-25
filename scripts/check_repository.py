@@ -20,7 +20,7 @@ REQUIRED = {
     "assets/brand/research.svg", "assets/brand/practice.svg",
     "assets/brand/experiments.svg", "assets/brand/community.svg",
     ".github/workflows/quality.yml", "scripts/build_signal_motion.mjs",
-    "assets/brand/signal-motion.gif",
+    "assets/brand/signal-motion.gif", "assets/brand/portal-entry.svg",
     "docs/index.html", "docs/.nojekyll", "docs/PORTAL.md",
     "scripts/check_public_portal.py", ".github/workflows/portal-public.yml",
     "docs/portal/style.css", "docs/portal/content.mjs", "docs/portal/calculations.mjs",
@@ -156,9 +156,9 @@ try:
         frames += 1
     assert offset == len(gif) - 1 and frames == 40 and len(signatures) == 40
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    assert readme.count("<details>") == readme.count("</details>") == 7
+    assert readme.count("<details>") == readme.count("</details>") == 9
     assert readme.count("<summary>") == readme.count("</summary>") == 7
-    print("PASS: 40 distinct decoded GIF frames, 4.8 seconds; 7 disclosure panels")
+    print("PASS: 40 distinct decoded GIF frames, 4.8 seconds; 9 disclosure panels")
 except (AssertionError, IndexError, OSError, ValueError) as exc:
     ERRORS.append(f"Motion or interactive panels invalid: {exc}")
 if ERRORS:
