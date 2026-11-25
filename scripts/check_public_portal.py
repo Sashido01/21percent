@@ -38,10 +38,10 @@ def fetch(path, nonce):
 
 def probe(expect_current):
     nonce = time.time_ns()
-    paths = list(ASSETS)
     if expect_current:
         ASSETS['portal/previews.mjs'] = ASSETS['portal/app.mjs']
-        paths.append('portal/previews.mjs')
+        ASSETS['portal/social-preview.png'] = {'image/png'}
+    paths = list(ASSETS)
     assets = {path: fetch(path, nonce) for path in paths}
     html = assets[""][0].decode("utf-8")
     for marker in ['id="research"', 'id="practice"', 'id="projects"', 'id="community"',

@@ -36,3 +36,8 @@ jobs:
 
       - name: Verify library previews match original sources
         run: node scripts/build_portal_previews.mjs --check
+
+      - name: Verify reproducible social cover and metadata
+        run: |
+          node scripts/build_social_preview.mjs --check
+          python3 scripts/check_social_preview.py
