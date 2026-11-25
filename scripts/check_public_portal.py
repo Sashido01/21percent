@@ -38,7 +38,11 @@ def fetch(path, nonce):
 
 def probe(expect_current):
     nonce = time.time_ns()
-    assets = {path: fetch(path, nonce) for path in ASSETS}
+    paths = list(ASSETS)
+    if expect_current:
+        ASSETS['portal/previews.mjs'] = ASSETS['portal/app.mjs']
+        paths.append('portal/previews.mjs')
+    assets = {path: fetch(path, nonce) for path in paths}
     html = assets[""][0].decode("utf-8")
     for marker in ['id="research"', 'id="practice"', 'id="projects"', 'id="community"',
                    'id="motion-toggle"', 'src="portal/app.mjs"', 'href="portal/style.css"']:
@@ -58,7 +62,7 @@ def probe(expect_current):
                   f"Published bytes differ: {path or 'index.html'}")
     for path, (body, media) in assets.items():
         print(f"HTTP 200 / {media} / {len(body)} bytes / {path or '/'}")
-    print("PASS: public HTTPS portal, 6 resources, consistent version " + html_version.group(1))
+    print("PASS: public HTTPS portal, " + str(len(assets)) + " resources, consistent version " + html_version.group(1))
     if expect_current:
         print("PASS: published files match the current commit byte-for-byte")
 

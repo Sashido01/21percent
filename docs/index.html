@@ -66,12 +66,12 @@
   <div><span class="micro">01 / БИБЛИОТЕКА</span><strong id="resource-count">Материалы</strong></div>
   <div><span class="micro">02 / ПРАКТИКУМ</span><strong>2 калькулятора</strong></div>
   <div><span class="micro">03 / ИНИЦИАТИВЫ</span><strong id="project-count">Каталог</strong></div>
-  <div><span class="micro">04 / ВЕРСИЯ</span><strong id="version">0.0.9</strong></div>
+  <div><span class="micro">04 / ВЕРСИЯ</span><strong id="version">0.0.10</strong></div>
  </div>
  <section id="research" class="section" aria-labelledby="research-title">
   <div class="section-head"><div><p class="eyebrow">01 / RESEARCH</p><h2 id="research-title">Библиотека решений</h2><p class="sub">Не лента обещаний, а инструменты для самостоятельной проверки.</p></div><a class="text-link" href="https://github.com/Sashido01/21percent/tree/main/research">Раздел на GitHub ↗</a></div>
   <div id="library-controls" class="library-controls" hidden><label class="search-label" for="search">Поиск по материалам</label><input id="search" type="search" placeholder="Например, инфляция или резерв" autocomplete="off" maxlength="100"><div class="filters" role="group" aria-label="Категория материала"><button type="button" data-filter="all" aria-pressed="true">Все</button><button type="button" data-filter="research" aria-pressed="false">Исследования</button><button type="button" data-filter="practice" aria-pressed="false">Практика</button><button type="button" data-filter="community" aria-pressed="false">Сообщество</button></div></div>
-  <p id="search-status" class="micro" role="status" aria-live="polite"></p>
+  <div class="search-feedback"><p id="search-status" class="micro" role="status" aria-live="polite"></p><button type="button" id="clear-search" class="clear-search" hidden>Сбросить поиск и фильтры</button></div>
   <div id="resource-grid" class="resource-grid">
    <article class="resource"><span class="micro">ИССЛЕДОВАНИЯ</span><h3>Как проверить финансовую новость</h3><p>Методика проверки первоисточников, дат и допущений.</p><a href="https://github.com/Sashido01/21percent/blob/main/research/METHOD.md">Открыть материал ↗</a></article>
    <article class="resource"><span class="micro">ПРАКТИКА</span><h3>Что осталось после инфляции?</h3><p>Реальная доходность и покупательная способность.</p><a href="https://github.com/Sashido01/21percent/blob/main/practice/01-real-return.md">Открыть материал ↗</a></article>
@@ -110,5 +110,6 @@
  </section>
 </main>
 <footer class="shell footer"><a class="wordmark" href="#main">21<span>%</span></a><p>Изучаем. Проверяем. Создаём.<br>21% — название клуба, а не обещанная доходность. Материалы образовательные, не индивидуальная инвестиционная рекомендация.</p><a class="text-link" href="https://github.com/Sashido01/21percent/blob/main/docs/PUBLISHING.md">Правила публикации ↗</a></footer>
+<dialog id="reader" class="reader" aria-labelledby="reader-title"><div class="reader-head"><div><p id="reader-category" class="micro"></p><h2 id="reader-title"></h2></div><button id="reader-close" type="button" class="reader-close" aria-label="Закрыть материал">×</button></div><div id="reader-body" class="reader-body"></div><div class="reader-footer"><a id="reader-source" class="button secondary" href="https://github.com/Sashido01/21percent">Полный оригинал на GitHub ↗</a></div></dialog>
 </body>
 </html>

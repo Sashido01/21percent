@@ -1,5 +1,6 @@
 import {VERSION,BASE,resources,projects,categoryNames,selectResources} from './content.mjs';
 import {realReturn,reserveCalc} from './calculations.mjs';
+import {previews} from './previews.mjs';
 const $=id=>document.getElementById(id);
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const number=new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2,minimumFractionDigits:0});
@@ -7,11 +8,30 @@ const money=new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maxim
 const fmt=n=>number.format(Math.abs(n)<1e-9?0:n);
 const rub=n=>money.format(Math.abs(n)<.005?0:n);
 const val=id=>$(id).valueAsNumber;
+const glyphPaths={"research":"M5 4h14v16H5z M8 8h8 M8 12h8 M8 16h5","practice":"M4 19h16 M6 16V9h3v7 M11 16V5h3v11 M16 16v-4h3v4","community":"M12 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6 M5 19v-2c0-3 3-5 7-5s7 2 7 5v2 M3 7a2 2 0 1 0 0 4 M21 7a2 2 0 1 1 0 4","invest":"M3 18h18 M4 15l5-5 4 3 7-8 M15 5h5v5","finplay":"M8 7h8l4 8-2 2-4-3h-4l-4 3-2-2z M8 10v4 M6 12h4 M16 11h.1 M18 13h.1","cash404":"M4 5h16v14H4z M7 9h4 M7 13h3 M15 9v5 M15 17h.1","auction":"M6 6l4-4 6 6-4 4z M10 10l9 9 M3 20h10","moneyhub":"M12 3l8 5v8l-8 5-8-5V8z M12 3v18 M4 8l16 8 M20 8L4 16","tax":"M5 3h14v18H5z M8 7h8 M9 11h.1 M15 17h.1 M8 18l8-8"};
+const projectKeys=['invest','finplay','cash404','auction','moneyhub','tax'];
+const ns='http://www.w3.org/2000/svg';
+function glyph(key){const svg=document.createElementNS(ns,'svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');svg.classList.add('card-glyph');const path=document.createElementNS(ns,'path');path.setAttribute('d',glyphPaths[key]);path.setAttribute('fill','none');path.setAttribute('stroke','currentColor');path.setAttribute('stroke-width','1.5');path.setAttribute('stroke-linecap','round');path.setAttribute('stroke-linejoin','round');svg.append(path);return svg;}
+function highlight(node,value,query){
+ const words=query.trim().split(/\s+/).filter(Boolean).sort((a,b)=>b.length-a.length);if(!words.length){node.textContent=value;return;}
+ const lower=value.toLocaleLowerCase('ru-RU');let i=0;
+ while(i<value.length){let hit=-1,word='';for(const term of words){const pos=lower.indexOf(term.toLocaleLowerCase('ru-RU'),i);if(pos>=0&&(hit<0||pos<hit)){hit=pos;word=term;}}if(hit<0){node.append(document.createTextNode(value.slice(i)));break;}node.append(document.createTextNode(value.slice(i,hit)),el('mark',value.slice(hit,hit+word.length)));i=hit+word.length;}
+}
+const reader=$('reader');let readerTrigger=null;
+function openReader(item,trigger){
+ readerTrigger=trigger;$('reader-category').textContent=categoryNames[item.category];$('reader-title').textContent=item.title;$('reader-source').href=BASE+item.path;
+ // Treat all source text as text, never inject Markdown or HTML into the DOM.
+ const body=$('reader-body');body.replaceChildren();let list=null;
+ for(const raw of previews[item.path].split('\n')){const line=raw.trim();if(!line){list=null;continue;}const clean=s=>s.replace(/\*\*([^*]+)\*\*/g,'$1').replace(/\[([^\]]+)\]\([^)]+\)/g,'$1').replace(/\x60([^\x60]+)\x60/g,'$1');if(/^#\s/.test(line))continue;const heading=line.match(/^#{2,6}\s+(.+)/);if(heading){body.append(el('h3',clean(heading[1])));list=null;continue;}const bullet=line.match(/^[-*]\s+(.+)/);const numbered=line.match(/^\d+\.\s+(.+)/);if(bullet||numbered){const tag=bullet?'ul':'ol';if(!list||list.tagName.toLowerCase()!==tag){list=el(tag);body.append(list);}list.append(el('li',clean((bullet||numbered)[1])));continue;}list=null;body.append(el('p',clean(line)));}
+ reader.showModal();$('reader-close').focus();
+}
+$('reader-close').addEventListener('click',()=>reader.close());reader.addEventListener('close',()=>{if(readerTrigger?.isConnected)readerTrigger.focus();});
 function itemCard(item,isProject=false){
- const card=el('article',undefined,isProject?'project':'resource');
- card.append(el('span',isProject?item.status:categoryNames[item.category],'micro'),el('h3',item.title),el('p',item.description));
- const link=el('a',isProject?'Подробнее ↗':'Открыть материал ↗');
- link.href=BASE+item.path;link.setAttribute('aria-label',item.title+' — открыть материал на GitHub');card.append(link);return card;
+ const card=el('article',undefined,isProject?'project':'resource');const key=isProject?projectKeys[projects.indexOf(item)]:item.category;
+ card.dataset.kind=key;const head=el('div',undefined,'card-top');head.append(glyph(key),el('span',isProject?item.status:categoryNames[item.category],'micro'));card.append(head);
+ const title=el('h3'),description=el('p');highlight(title,item.title,isProject?'':$('search').value);highlight(description,item.description,isProject?'':$('search').value);card.append(title,description);
+ const link=el('a',isProject?'Подробнее ↗':'Оригинал ↗');link.href=BASE+item.path;link.setAttribute('aria-label',item.title+' — открыть материал на GitHub');
+ const actions=el('div',undefined,'card-actions');if(!isProject&&typeof reader.showModal==='function'){const button=el('button','Читать','reader-open');button.type='button';button.setAttribute('aria-label','Читать: '+item.title);button.addEventListener('click',()=>openReader(item,button));actions.append(button);}actions.append(link);card.append(actions);return card;
 }
 let filter='all';
 function renderLibrary(){
@@ -19,9 +39,11 @@ function renderLibrary(){
  $('resource-grid').replaceChildren(...found.map(item=>itemCard(item)));
  if(!found.length)$('resource-grid').append(el('p','Ничего не найдено. Измените запрос или категорию.','empty'));
  $('search-status').textContent='Материалов найдено: '+found.length+' из '+resources.length;
+ $('clear-search').hidden=!$('search').value&&filter==='all';
 }
 $('library-controls').hidden=false;
 $('search').addEventListener('input',renderLibrary);
+$('clear-search').addEventListener('click',()=>{filter='all';$('search').value='';document.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter==='all')));renderLibrary();$('search').focus();});
 document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{
  filter=button.dataset.filter;
  document.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
