@@ -4,11 +4,15 @@
 
 <img src="assets/brand/signal-motion.gif" width="100%" alt="Декоративный сигнал проходит четыре направления клуба: исследования, практика, эксперименты, сообщество.">
 
-**Финансовая грамотность через практику, а не обещания.** 
+**Финансовая грамотность через практику, а не обещания.**
+
+**[Войти в SIGNAL ROOM — интерактивный портал клуба ↗](https://sashido01.github.io/21percent/)**
+
+Библиотека с поиском · финансовые калькуляторы · карта инициатив.
 
 [Открыть анимацию отдельно](assets/brand/signal-motion.gif)
 
-[О клубе](docs/ABOUT.md) · [Участие](CONTRIBUTING.md) · [Обсуждения](https://github.com/Sashido01/21percent/discussions) · [Дорожная карта](ROADMAP.md) · [Портал: статус публикации](docs/PORTAL.md)
+[О клубе](docs/ABOUT.md) · [Участие](CONTRIBUTING.md) · [Обсуждения](https://github.com/Sashido01/21percent/discussions) · [Дорожная карта](ROADMAP.md) · [Портал: документация](docs/PORTAL.md)
 
 [![Проверки репозитория](https://github.com/Sashido01/21percent/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/Sashido01/21percent/actions/workflows/quality.yml) · [Текущая версия](VERSION) · [История изменений](CHANGELOG.md)
 
