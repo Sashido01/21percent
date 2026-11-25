@@ -38,7 +38,7 @@ def git(*args):
 
 def api(path, **params):
     token = os.environ["GH_TOKEN"]
-    url = f"https://api.github.com/repos/{REPO}/{path}"
+    url = f"https://api.github.com/repos/{REPO}" + ("/" + path if path else "")
     if params:
         url += "?" + urlencode(params)
     request = Request(url, headers={"Authorization": "Bearer " + token,

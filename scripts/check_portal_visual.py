@@ -189,13 +189,24 @@ def capture(chrome,url,dest,w,h,profile,anchor):
     try:
         portfile=profile/"DevToolsActivePort"
         deadline=time.monotonic()+20
-        while not portfile.is_file() and time.monotonic()<deadline and proc.poll() is None:
+        target=None
+        while time.monotonic()<deadline and proc.poll() is None:
+            try:
+                # Chrome can create the port file before writing its contents.
+                lines=portfile.read_text().splitlines()
+                if not lines or not lines[0].isdigit():
+                    time.sleep(.1)
+                    continue
+                port=int(lines[0])
+                with urlopen(f"http://127.0.0.1:{port}/json/list",timeout=2) as response:
+                    targets=json.load(response)
+                target=next((x for x in targets if x.get("type")=="page" and x.get("webSocketDebuggerUrl")),None)
+                if target:
+                    break
+            except (OSError, ValueError):
+                pass
             time.sleep(.1)
-        ensure(portfile.is_file(),"Chrome DevTools port did not appear")
-        port=int(portfile.read_text().splitlines()[0])
-        with urlopen(f"http://127.0.0.1:{port}/json/list",timeout=10) as response:
-            targets=json.load(response)
-        target=next(x for x in targets if x["type"]=="page")
+        ensure(target is not None,"Chrome DevTools endpoint did not become ready")
         dev=DevTools(target["webSocketDebuggerUrl"])
         dev.call("Page.enable")
         dev.call("Emulation.setDeviceMetricsOverride",width=w,height=h,deviceScaleFactor=1,mobile=False)
