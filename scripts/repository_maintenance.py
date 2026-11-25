@@ -118,7 +118,12 @@ def tag_status(refs, version, commit):
 
 def tag_plan(chain, version_at, subject_at):
     chain_set = set(chain)
-    if any(sha not in chain_set or version_at(sha) != version for version, sha in HISTORICAL.items()):
+    root = HISTORICAL["0.0.0"]
+    if not chain or chain[-1] != root or not subject_at(root).startswith("v0.0.0 "):
+        raise RuntimeError("Historical root commit does not match main")
+    # The exact initial commit predates VERSION. All later historical commits must have it.
+    if any(sha not in chain_set or version_at(sha) != version
+           for version, sha in HISTORICAL.items() if version != "0.0.0"):
         raise RuntimeError("Historical version map does not match main first-parent history")
     result = dict(HISTORICAL)
     previous = "0.0.12"
