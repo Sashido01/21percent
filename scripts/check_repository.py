@@ -17,9 +17,11 @@ REQUIRED = {
     "research/METHOD.md", "practice/README.md", "events/README.md",
     "projects/README.md", "assets/brand/hero.svg", "assets/brand/atlas.svg",
     "assets/brand/mark.svg", "assets/brand/signature.svg",
+    "assets/brand/research.svg", "assets/brand/practice.svg",
+    "assets/brand/experiments.svg", "assets/brand/community.svg",
     ".github/workflows/quality.yml",
 }
-LINKS = re.compile(r'\]\(([^)\s]+)\)|\bsrc="([^"]+)"')
+LINKS = re.compile(r'\]\(([^)\s]+)\)|\b(?:src|href)="([^"]+)"')
 ERRORS = []
 for missing in sorted(REQUIRED - TRACKED):
     ERRORS.append(f"Missing tracked path: {missing}")
@@ -54,6 +56,15 @@ for name in sorted(TRACKED):
                 ERRORS.append(f"{name}: missing viewBox")
             if root.find("{http://www.w3.org/2000/svg}title") is None:
                 ERRORS.append(f"{name}: missing title")
+            if name.startswith("assets/brand/"):
+                if root.find("{http://www.w3.org/2000/svg}desc") is None:
+                    ERRORS.append(f"{name}: missing description")
+                if root.get("role") != "img" or not root.get("aria-labelledby"):
+                    ERRORS.append(f"{name}: missing accessible name metadata")
+                if path.stat().st_size > 250_000:
+                    ERRORS.append(f"{name}: SVG exceeds 250 kB budget")
+                if "animation:" in content and "prefers-reduced-motion" not in content:
+                    ERRORS.append(f"{name}: animation has no reduced-motion fallback")
             for node in root.iter():
                 if node.tag.rsplit("}", 1)[-1] in {"script", "foreignObject"}:
                     ERRORS.append(f"{name}: forbidden SVG element")
