@@ -11,3 +11,5 @@
 Все SVG автономны; графика условная и не отображает рыночные данные. См. [визуальную систему](../docs/DESIGN.md) и [правила публикации](../docs/PUBLISHING.md).
 
 - [Portal entry](brand/portal-entry.svg) — вход в интерактивный портал.
+
+- [Social preview](../docs/portal/social-preview.png) — фирменная обложка 1280×640 для ссылок и настройки GitHub Social preview; воспроизводится `node scripts/build_social_preview.mjs`.
