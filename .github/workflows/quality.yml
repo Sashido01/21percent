@@ -25,3 +25,6 @@ jobs:
           persist-credentials: false
       - name: Validate repository
         run: python3 scripts/check_repository.py
+
+      - name: Verify reproducible motion asset
+        run: node scripts/build_signal_motion.mjs --check

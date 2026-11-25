@@ -19,7 +19,8 @@ REQUIRED = {
     "assets/brand/mark.svg", "assets/brand/signature.svg",
     "assets/brand/research.svg", "assets/brand/practice.svg",
     "assets/brand/experiments.svg", "assets/brand/community.svg",
-    ".github/workflows/quality.yml",
+    ".github/workflows/quality.yml", "scripts/build_signal_motion.mjs",
+    "assets/brand/signal-motion.gif",
 }
 LINKS = re.compile(r'\]\(([^)\s]+)\)|\b(?:src|href)="([^"]+)"')
 ERRORS = []
@@ -85,6 +86,76 @@ try:
         ERRORS.append("VERSION and latest CHANGELOG entry differ")
 except (OSError, UnicodeError) as exc:
     ERRORS.append(str(exc))
+# Decode the fixed-width LZW used by the motion generator independently.
+try:
+    gif = (ROOT / "assets/brand/signal-motion.gif").read_bytes()
+    assert gif[:6] == b"GIF89a" and len(gif) < 1_800_000
+    width = int.from_bytes(gif[6:8], "little")
+    height = int.from_bytes(gif[8:10], "little")
+    assert (width, height) == (640, 144)
+    offset = 13 + 3 * (2 ** ((gif[10] & 7) + 1))
+    frames = 0
+    signatures = set()
+    import hashlib
+    while gif[offset] != 0x3B:
+        assert gif[offset:offset+4] == bytes([0x21, 0xF9, 4, 4])
+        assert int.from_bytes(gif[offset+4:offset+6], "little") == 12
+        assert gif[offset+6:offset+8] == bytes([0, 0])
+        offset += 8
+        assert gif[offset] == 0x2C and gif[offset+9:offset+11] == bytes([0, 8])
+        assert int.from_bytes(gif[offset+5:offset+7], "little") == width
+        assert int.from_bytes(gif[offset+7:offset+9], "little") == height
+        offset += 11
+        packed = bytearray()
+        while gif[offset]:
+            size = gif[offset]
+            offset += 1
+            packed.extend(gif[offset:offset+size])
+            offset += size
+        offset += 1
+        dictionary = {i: bytes([i]) for i in range(256)}
+        previous = None
+        next_code = 258
+        decoded = bytearray()
+        acc = bits = 0
+        ended = False
+        for value in packed:
+            acc |= value << bits
+            bits += 8
+            if bits < 9:
+                continue
+            code = acc & 511
+            acc >>= 9
+            bits -= 9
+            if code == 256:
+                dictionary = {i: bytes([i]) for i in range(256)}
+                previous = None
+                next_code = 258
+                continue
+            if code == 257:
+                ended = True
+                break
+            if code in dictionary:
+                entry = dictionary[code]
+            else:
+                assert previous is not None and code == next_code
+                entry = previous + previous[:1]
+            decoded.extend(entry)
+            if previous is not None:
+                dictionary[next_code] = previous + entry[:1]
+                next_code += 1
+                assert next_code <= 511
+            previous = entry
+        assert ended and len(decoded) == width * height
+        signatures.add(hashlib.sha256(decoded).digest())
+        frames += 1
+    assert offset == len(gif) - 1 and frames == 40 and len(signatures) == 40
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert readme.count("<details>") == readme.count("</details>") == 7
+    assert readme.count("<summary>") == readme.count("</summary>") == 7
+    print("PASS: 40 distinct decoded GIF frames, 4.8 seconds; 7 disclosure panels")
+except (AssertionError, IndexError, OSError, ValueError) as exc:
+    ERRORS.append(f"Motion or interactive panels invalid: {exc}")
 if ERRORS:
     print("\n".join(ERRORS), file=sys.stderr)
     sys.exit(1)
