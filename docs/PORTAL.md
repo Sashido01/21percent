@@ -30,3 +30,7 @@
 ## Социальное превью
 
 Портал содержит Open Graph и Twitter Card метаданные с абсолютным адресом PNG 1280×640. [Обложка](portal/social-preview.png) подходит и для ручной загрузки через Settings → General → Social preview. Отображение в Telegram/VK зависит от их парсеров и кэша; отдельно не подтверждено. Генерация и проверка: `node scripts/build_social_preview.mjs --check` и `python scripts/check_social_preview.py`.
+
+## Визуальные регрессии
+
+`python scripts/check_portal_visual.py --out visual-qa --baseline <commit>` формирует восемь скриншотов в Chromium и отчёт JSON; без базового коммита — только текущие изображения. CI сравнивает с базой PR/предыдущим main и прикладывает скриншоты как артефакт. Проверки не доказывают полное соответствие WCAG и не охватывают Safari/Firefox или рендеринг README на GitHub.

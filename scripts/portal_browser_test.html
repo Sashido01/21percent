@@ -35,7 +35,31 @@ async function run(){
  frame.width='360';await tick();await tick();check(d.documentElement.scrollWidth<=frame.clientWidth+2,'mobile overflow');
  frame.width='320';await tick();await tick();check(d.documentElement.scrollWidth<=frame.clientWidth+2,'narrow mobile overflow');
  check($('project-grid').children.length===6,'project catalog');
- out.textContent='PASS: portal browser interactions, desktop and 360/320px layout';
+
+ // Visual geometry and accessibility invariants at five responsive widths.
+ const overlap=(a,b)=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>2&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2;
+ const lum=rgb=>{const v=rgb.match(/[\d.]+/g).slice(0,3).map(x=>Number(x)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4);return .2126*v[0]+.7152*v[1]+.0722*v[2];};
+ const ratio=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
+ const fieldStyle=w.getComputedStyle($('search'));check(ratio(fieldStyle.borderTopColor,fieldStyle.backgroundColor)>=3,'input boundary contrast');
+ check(ratio(fieldStyle.color,fieldStyle.backgroundColor)>=4.5,'input text contrast');
+ for(const width of [320,390,768,1024,1440]){
+   frame.width=String(width);await tick();await tick();
+   check(d.documentElement.scrollWidth<=frame.clientWidth+2,'overflow '+width);
+   const rects=Array.from(d.querySelectorAll('.node')).map(n=>n.getBoundingClientRect()),map=$('signal-map').getBoundingClientRect();
+   rects.forEach((r,i)=>{check(r.height>=43&&r.width>=44,'node target '+width+' / '+i);check(r.left>=map.left-1&&r.right<=map.right+1&&r.top>=map.top-1&&r.bottom<=map.bottom+1,'node clipped '+width+' / '+i);for(let j=i+1;j<rects.length;j++)check(!overlap(r,rects[j]),'node overlap '+width+' / '+i+' / '+j);});
+   for(const button of d.querySelectorAll('.scenario-buttons button,.filters button,.reader-open,.nav a')){const r=button.getBoundingClientRect();check(r.height>=43,'control target '+width+' / '+button.textContent);}
+   const first=d.querySelector('.reader-open');first.click();const dialog=$('reader').getBoundingClientRect();
+   check(dialog.left>=-1&&dialog.right<=frame.clientWidth+1&&dialog.height<=frame.clientHeight+1,'dialog viewport '+width);
+   check(d.activeElement===$('reader-close'),'dialog initial focus '+width);
+   $('reader-close').click();await tick();check(d.activeElement===first,'dialog focus return '+width);
+ }
+ check(d.querySelector('main#main')!==null&&d.querySelectorAll('h1').length===1,'semantic landmarks');
+ if(w.matchMedia('(prefers-reduced-motion: reduce)').matches){
+   check($('motion-toggle').disabled&&d.documentElement.dataset.motion==='paused','reduced motion control');
+   check(w.getComputedStyle(d.querySelector('.orbital')).animationName==='none','reduced motion animation disabled');
+ }
+
+ out.textContent='PASS: portal browser interactions, five-width visual geometry, focus and contrast';
 }
 frame.addEventListener('load',()=>run().catch(e=>out.textContent='FAIL: '+e.message),{once:true});
 </script></body></html>
