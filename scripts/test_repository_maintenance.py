@@ -1,0 +1,66 @@
+import unittest
+from unittest.mock import patch
+import repository_maintenance as m
+
+class MaintenanceTests(unittest.TestCase):
+    def setUp(self):
+        self.sha="a"*40
+        self.base="b"*40
+        self.merge="c"*40
+        self.branch={"name":"design/test","commit":{"sha":self.sha},"protected":False}
+        self.pr={"number":9,"state":"closed","merged_at":None,
+                 "head":{"ref":"design/test","sha":self.sha,"repo":{"full_name":m.REPO}},
+                 "base":{"ref":"main","repo":{"full_name":m.REPO}}}
+        self.trees={self.merge:("tree",self.base)}
+    def decide(self, opened=None):
+        return m.eligible_branch(self.branch,self.pr,opened or set(),self.trees,
+                                 lambda _: "tree",lambda _:self.base)
+    def test_identical_squash_tree(self):
+        self.assertIn("identical tree",self.decide())
+    def test_merged_pr(self):
+        self.pr.update(merged_at="time",merge_commit_sha=self.merge)
+        self.assertIn("merged PR",self.decide())
+    def test_open_pr(self):
+        self.assertIsNone(self.decide({"design/test"}))
+    def test_protected(self):
+        self.branch["protected"]=True
+        self.assertIsNone(self.decide())
+    def test_main(self):
+        self.branch["name"]="main"
+        self.pr["head"]["ref"]="main"
+        self.assertIsNone(self.decide())
+    def test_unknown_prefix(self):
+        self.branch["name"]="work"
+        self.pr["head"]["ref"]="work"
+        self.assertIsNone(self.decide())
+    def test_head_changed(self):
+        self.branch["commit"]["sha"]="d"*40
+        self.assertIsNone(self.decide())
+    def test_unmerged_different_tree(self):
+        self.trees[self.merge]=("different",self.base)
+        self.assertIsNone(self.decide())
+    def test_wrong_parent(self):
+        self.trees[self.merge]=("tree","e"*40)
+        self.assertIsNone(self.decide())
+    def test_fork(self):
+        self.pr["head"]["repo"]["full_name"]="other/repo"
+        self.assertIsNone(self.decide())
+    def test_tag_states(self):
+        ref="refs/tags/v0.0.12"
+        self.assertEqual(m.tag_status({}, "0.0.12",self.sha),"missing")
+        self.assertEqual(m.tag_status({ref:self.sha}, "0.0.12",self.sha),"ok")
+        self.assertEqual(m.tag_status({ref:self.merge,ref+"^{}":self.sha}, "0.0.12",self.sha),"ok")
+        self.assertEqual(m.tag_status({ref:self.merge}, "0.0.12",self.sha),"conflict")
+    def test_version_plan(self):
+        chain=[self.sha,*reversed(list(m.HISTORICAL.values()))]
+        versions={sha:v for v,sha in m.HISTORICAL.items()}
+        versions[self.sha]="0.0.13"
+        self.assertEqual(m.tag_plan(chain,versions.__getitem__,lambda _: "v0.0.13 — Maintenance")["0.0.13"],self.sha)
+        with self.assertRaises(RuntimeError):
+            m.tag_plan(chain,versions.__getitem__,lambda _: "wrong subject")
+    def test_historical_map_must_match(self):
+        with self.assertRaises(RuntimeError):
+            m.tag_plan([m.ANCHOR],lambda _: "0.0.12",lambda _: "")
+
+if __name__=="__main__":
+    unittest.main()

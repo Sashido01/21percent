@@ -26,6 +26,7 @@ REQUIRED = {
     "docs/portal/style.css", "docs/portal/content.mjs", "docs/portal/calculations.mjs",
     "docs/portal/app.mjs", "docs/portal/previews.mjs", "scripts/build_portal_previews.mjs", "docs/portal/icon.svg", "scripts/portal.test.mjs",
     "scripts/build_social_preview.mjs", "scripts/check_social_preview.py", "docs/portal/social-preview.png",
+    "scripts/repository_maintenance.py", "scripts/test_repository_maintenance.py", ".github/workflows/repository-maintenance.yml",
     "scripts/check_portal_browser.py", "scripts/check_portal_visual.py", "scripts/portal_browser_test.html",
 }
 LINKS = re.compile(r'\]\(([^)\s]+)\)|\b(?:src|href)="([^"]+)"')

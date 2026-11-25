@@ -1,4 +1,4 @@
-export const VERSION = '0.0.12';
+export const VERSION = '0.0.13';
 export const BASE = 'https://github.com/Sashido01/21percent/blob/main/';
 export const resources = [
  {id:'verify',category:'research',title:'Как проверить финансовую новость',description:'Первоисточники, даты, определения, расчёты и ограничения.',path:'research/METHOD.md'},
