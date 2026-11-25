@@ -24,7 +24,7 @@ REQUIRED = {
     "docs/index.html", "docs/.nojekyll", "docs/PORTAL.md",
     "scripts/check_public_portal.py", ".github/workflows/portal-public.yml",
     "docs/portal/style.css", "docs/portal/content.mjs", "docs/portal/calculations.mjs",
-    "docs/portal/app.mjs", "docs/portal/icon.svg", "scripts/portal.test.mjs",
+    "docs/portal/app.mjs", "docs/portal/previews.mjs", "scripts/build_portal_previews.mjs", "docs/portal/icon.svg", "scripts/portal.test.mjs",
     "scripts/check_portal_browser.py", "scripts/portal_browser_test.html",
 }
 LINKS = re.compile(r'\]\(([^)\s]+)\)|\b(?:src|href)="([^"]+)"')

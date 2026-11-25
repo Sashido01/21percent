@@ -33,3 +33,6 @@ jobs:
         run: node --test scripts/portal.test.mjs
       - name: Portal browser interactions
         run: python3 scripts/check_portal_browser.py
+
+      - name: Verify library previews match original sources
+        run: node scripts/build_portal_previews.mjs --check
