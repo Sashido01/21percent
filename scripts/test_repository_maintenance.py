@@ -55,9 +55,28 @@ class MaintenanceTests(unittest.TestCase):
         chain=[self.sha,*reversed(list(m.HISTORICAL.values()))]
         versions={sha:v for v,sha in m.HISTORICAL.items()}
         versions[self.sha]="0.0.13"
-        self.assertEqual(m.tag_plan(chain,versions.__getitem__,lambda _: "v0.0.13 — Maintenance")["0.0.13"],self.sha)
+        root=m.HISTORICAL["0.0.0"]
+        del versions[root]
+        subject=lambda c: "v0.0.0 — Initial" if c==root else "v0.0.13 — Maintenance"
+        self.assertEqual(m.tag_plan(chain,versions.__getitem__,subject)["0.0.13"],self.sha)
         with self.assertRaises(RuntimeError):
             m.tag_plan(chain,versions.__getitem__,lambda _: "wrong subject")
+    def test_root_must_be_exact_initial_commit(self):
+        chain=list(reversed(list(m.HISTORICAL.values())))
+        versions={sha:v for v,sha in m.HISTORICAL.items() if v!="0.0.0"}
+        with self.assertRaises(RuntimeError):
+            m.tag_plan(chain+["f"*40],versions.__getitem__,lambda _: "v0.0.0 — Initial")
+    def test_later_historical_version_must_match(self):
+        chain=list(reversed(list(m.HISTORICAL.values())))
+        versions={sha:v for v,sha in m.HISTORICAL.items() if v!="0.0.0"}
+        versions[m.HISTORICAL["0.0.1"]]="0.0.99"
+        with self.assertRaises(RuntimeError):
+            m.tag_plan(chain,versions.__getitem__,lambda _: "v0.0.0 — Initial")
+    def test_real_history(self):
+        # CI checks real, immutable historical commits too (not only fixtures).
+        chain=m.first_parent_chain(m.ANCHOR)
+        actual=m.tag_plan(chain,m.ver,lambda c:m.git("show","-s","--format=%s",c))
+        self.assertEqual(actual,m.HISTORICAL)
     def test_historical_map_must_match(self):
         with self.assertRaises(RuntimeError):
             m.tag_plan([m.ANCHOR],lambda _: "0.0.12",lambda _: "")
