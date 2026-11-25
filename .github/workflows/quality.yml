@@ -55,3 +55,6 @@ jobs:
           path: visual-qa/
           if-no-files-found: ignore
           retention-days: 14
+
+      - name: Test repository maintenance safeguards
+        run: python3 -m unittest discover -s scripts -p test_repository_maintenance.py -v
