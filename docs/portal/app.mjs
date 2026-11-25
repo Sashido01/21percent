@@ -62,3 +62,31 @@ function motionState(paused){
 motion.hidden=false;motionState(preference.matches);
 motion.addEventListener('click',()=>motionState(document.documentElement.dataset.motion==='running'));
 preference.addEventListener('change',event=>motionState(event.matches));
+
+// Enhance the four native links only after JavaScript initializes.
+const coreModules=[{"id":"research","name":"Исследования","label":"RESEARCH / 01","desc":"Факты, первоисточники и проверяемые финансовые гипотезы.","cta":"Открыть библиотеку"},{"id":"practice","name":"Практикум","label":"PRACTICE / 02","desc":"Сценарии, расчёты и финансовые решения на конкретных числах.","cta":"Перейти к расчётам"},{"id":"projects","name":"Эксперименты","label":"EXPERIMENTS / 03","desc":"Игровые форматы, исследования и совместные технологические проекты.","cta":"Посмотреть инициативы"},{"id":"community","name":"Сообщество","label":"COMMUNITY / 04","desc":"Встречи, открытые обсуждения и совместная работа участников.","cta":"Присоединиться"}];
+const coreButtons=[];
+function selectCore(id){
+ const module=coreModules.find(item=>item.id===id);if(!module)return;
+ $('signal-map').dataset.module=id;
+ for(const button of coreButtons)button.setAttribute('aria-pressed',String(button.dataset.module===id));
+ $('core-label').textContent=module.label;$('core-title').textContent=module.name;$('core-desc').textContent=module.desc;
+ const enter=$('core-enter');enter.href='#'+id;enter.textContent=module.cta+' ↗';
+}
+document.querySelectorAll('[data-module-select]').forEach(link=>{
+ const button=document.createElement('button');button.type='button';button.className=link.className;button.dataset.module=link.dataset.moduleSelect;
+ button.append(...Array.from(link.childNodes).map(node=>node.cloneNode(true)));
+ button.setAttribute('aria-controls','core-preview');button.addEventListener('click',()=>selectCore(button.dataset.module));
+ link.replaceWith(button);coreButtons.push(button);
+});
+$('core-preview').hidden=false;selectCore('research');
+const sectionLinks=Array.from(document.querySelectorAll('.nav a[href^="#"]'));
+function highlightSection(id){for(const link of sectionLinks){if(link.hash==='#'+id)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');}}
+function activeSection(){
+ const threshold=Math.min(220,window.innerHeight*.35);let current='';
+ for(const link of sectionLinks){const section=document.getElementById(link.hash.slice(1));if(section&&section.getBoundingClientRect().top<=threshold)current=section.id;}
+ highlightSection(current);
+}
+for(const link of sectionLinks)link.addEventListener('click',()=>highlightSection(link.hash.slice(1)));
+let scrollPending=false;window.addEventListener('scroll',()=>{if(scrollPending)return;scrollPending=true;requestAnimationFrame(()=>{activeSection();scrollPending=false;});},{passive:true});
+window.addEventListener('hashchange',()=>highlightSection(location.hash.slice(1)));activeSection();
