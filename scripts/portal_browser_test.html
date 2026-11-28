@@ -6,7 +6,9 @@ async function run(){
  const d=frame.contentDocument,w=frame.contentWindow,$=id=>d.getElementById(id);
  for(let i=0;i<40&&$('library-controls').hidden;i++)await tick();
  check(!$('library-controls').hidden,'app initialized');
- check($('resource-grid').children.length===6,'initial library');
+ check($('resource-grid').children.length===7,'initial library');
+ check(d.querySelector('.nav a[href="ruble/"]')&&d.querySelector('.featured-research a[href="ruble/"]')&&d.querySelector('.featured-research a[href="ruble/questions/"]'),'featured ruble navigation');
+ $('search').value='цифровой рубль';$('search').dispatchEvent(new w.Event('input',{bubbles:true}));check($('resource-grid').children.length===1&&$('resource-grid').querySelector('a[href="ruble/"]')&&$('resource-grid').querySelector('a[href="ruble/questions/"]'),'ruble library search and direct links');$('clear-search').click();
  const read=d.querySelector('.reader-open');read.click();check($('reader').open&&$('reader-body').textContent.length>100,'reader content');$('reader-close').click();check(!$('reader').open,'reader close');
  check(d.querySelectorAll('.project .card-glyph').length===6,'initiative identities');
  check(!$('core-preview').hidden&&$('signal-map').dataset.module==='research','core initial');
@@ -18,7 +20,7 @@ async function run(){
  $('search').value='инфляции';$('search').dispatchEvent(new w.Event('input',{bubbles:true}));
  check($('resource-grid').children.length===1&&$('resource-grid').textContent.includes('инфляции'),'search');check(d.querySelector('.resource mark')!==null,'highlight match');
  d.querySelector('[data-filter="research"]').click();check($('resource-grid').textContent.includes('Ничего не найдено'),'filter empty');
- $('clear-search').click();check($('resource-grid').children.length===6&&$('search').value===''&&$('clear-search').hidden,'clear filters');
+ $('clear-search').click();check($('resource-grid').children.length===7&&$('search').value===''&&$('clear-search').hidden,'clear filters');
  check($('real-rate').textContent.includes('3,7'),'real calculator initial');
  check(!$('real-chart').hidden&&parseFloat($('real-chart-nominal-bar').style.width)===100,'real chart initial');
  check(parseFloat($('real-chart-real-bar').style.width)<100&&$('real-chart').dataset.outcome==='positive','real chart proportional');
@@ -86,6 +88,8 @@ async function run(){
  r('show-all').click();check(rd.querySelectorAll('[data-chapter]:not([hidden])').length===12&&r('progress-label').textContent==='12 / 12','ruble full overview');
  for(const width of [320,390,768,1024,1440]){rr.width=String(width);await tick();await tick();check(rd.documentElement.scrollWidth<=rr.clientWidth+2,'ruble overflow '+width);}
  r('show-all').click();check(rd.querySelectorAll('[data-chapter]:not([hidden])').length===1,'ruble restore step mode');
+ const ff=document.createElement('iframe');ff.title='FAQ test';ff.width='1280';ff.height='900';const loadedFaq=new Promise(resolve=>ff.addEventListener('load',resolve,{once:true}));ff.src='ruble/questions/index.html#q-freeze';document.body.append(ff);await loadedFaq;const fd=ff.contentDocument,fw=ff.contentWindow,f=id=>fd.getElementById(id);for(let i=0;i<40&&f('faq-controls').hidden;i++)await tick();check(!f('faq-controls').hidden&&f('q-freeze').open,'FAQ deep link');check(fd.querySelectorAll('[data-faq-item]').length===48,'FAQ count');f('faq-search').value='айфон';f('faq-search').dispatchEvent(new fw.Event('input',{bubbles:true}));check(!f('q-ios').hidden&&f('q-pension').hidden,'FAQ synonym search');f('faq-clear').click();fd.querySelector('[data-faq-filter="business"]').click();check(!f('q-commission').hidden&&f('q-pension').hidden,'FAQ category');f('faq-search').value='несуществующийвопрос';f('faq-search').dispatchEvent(new fw.Event('input',{bubbles:true}));check(!f('faq-empty').hidden,'FAQ empty search');f('faq-clear').click();check(fd.querySelectorAll('[data-faq-item]:not([hidden])').length===48,'FAQ reset');for(const width of [320,390,768,1024,1440]){ff.width=String(width);await tick();check(fd.documentElement.scrollWidth<=ff.clientWidth+2,'FAQ overflow '+width);}
+ check(rd.querySelector('a[href="questions/"]')&&rd.querySelector('a[href="../"]'),'ruble FAQ and portal navigation');
  out.textContent='PASS: portal browser interactions, five-width visual geometry, focus and contrast';
 }
 frame.addEventListener('load',()=>run().catch(e=>out.textContent='FAIL: '+e.message),{once:true});

@@ -30,6 +30,7 @@ function itemCard(item,isProject=false){
  const card=el('article',undefined,isProject?'project':'resource');const key=isProject?projectKeys[projects.indexOf(item)]:item.category;
  card.dataset.kind=key;const head=el('div',undefined,'card-top');head.append(glyph(key),el('span',isProject?item.status:categoryNames[item.category],'micro'));card.append(head);
  const title=el('h3'),description=el('p');highlight(title,item.title,isProject?'':$('search').value);highlight(description,item.description,isProject?'':$('search').value);card.append(title,description);
+ if(item.page&&!isProject){const actions=el('div',undefined,'card-actions');const a=el('a','Открыть исследование ↗','direct-research');a.href=item.page;const q=el('a','Вопросы и ответы ↗');q.href=item.questions;actions.append(a,q);card.append(actions);return card;}
  const link=el('a',isProject?'Подробнее ↗':'Оригинал ↗');link.href=BASE+item.path;link.setAttribute('aria-label',item.title+' — открыть материал на GitHub');
  const actions=el('div',undefined,'card-actions');if(!isProject&&typeof reader.showModal==='function'){const button=el('button','Читать','reader-open');button.type='button';button.setAttribute('aria-label','Читать: '+item.title);button.addEventListener('click',()=>openReader(item,button));actions.append(button);}actions.append(link);card.append(actions);return card;
 }

@@ -215,7 +215,7 @@ def capture(chrome,url,dest,w,h,profile,anchor):
         deadline=time.monotonic()+20
         ready=False
         while time.monotonic()<deadline:
-            ready=dev.evaluate("document.readyState==='complete' && !!document.querySelector('#resource-grid .reader-open') && document.querySelector('#resource-grid').children.length===6")
+            ready=dev.evaluate("document.readyState==='complete' && !!document.querySelector('#resource-grid .reader-open') && [6,7].includes(document.querySelector('#resource-grid').children.length)")
             if ready: break
             time.sleep(.15)
         ensure(ready,"Portal did not initialize before screenshot")
