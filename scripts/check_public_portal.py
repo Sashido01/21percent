@@ -43,8 +43,8 @@ def probe(expect_current):
         ASSETS['portal/social-preview.png'] = {'image/png'}
         ASSETS['ruble/index.html'] = {'text/html'}
         ASSETS['ruble/detail.html'] = {'text/html'}
-        ASSETS['ruble/talk.css'] = {'text/css'}
-        ASSETS['ruble/talk.mjs'] = ASSETS['portal/app.mjs']
+        ASSETS['ruble/visuals.mjs'] = ASSETS['portal/app.mjs']
+        ASSETS['portal/research-visuals.mjs'] = ASSETS['portal/app.mjs']
         ASSETS['ruble/ruble.css'] = {'text/css'}
         ASSETS['ruble/ruble.mjs'] = ASSETS['portal/app.mjs']
         ASSETS['portal/research-route.mjs'] = ASSETS['portal/app.mjs']
@@ -66,7 +66,7 @@ def probe(expect_current):
           "Inconsistent deployed versions")
     if expect_current:
         check('id="research-catalog"' in html and 'id="research-feed"' in html and 'href="ruble/"' in html, 'Missing catalog/feed navigation')
-        check('id="talk-deep"' in assets['ruble/index.html'][0].decode('utf-8') and 'data-faq-item' in assets['ruble/detail.html'][0].decode('utf-8'), 'Missing visual presentation or detailed research')
+        check('id="live-text"' in assets['ruble/index.html'][0].decode('utf-8') and 'data-faq-item' in assets['ruble/index.html'][0].decode('utf-8') and 'data-presentation-mode="living-canvas"' in assets['ruble/index.html'][0].decode('utf-8'), 'Missing single visual-first living map or full content')
         expected = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
         check(html_version.group(1) == expected,
               f"Deployment still serves {html_version.group(1)}, expected {expected}")
