@@ -50,10 +50,10 @@ async function run(){
    const rects=Array.from(d.querySelectorAll('.node')).map(n=>n.getBoundingClientRect()),map=$('signal-map').getBoundingClientRect();
    rects.forEach((r,i)=>{check(r.height>=43&&r.width>=44,'node target '+width+' / '+i);check(r.left>=map.left-1&&r.right<=map.right+1&&r.top>=map.top-1&&r.bottom<=map.bottom+1,'node clipped '+width+' / '+i);for(let j=i+1;j<rects.length;j++)check(!overlap(r,rects[j]),'node overlap '+width+' / '+i+' / '+j);});
    for(const button of d.querySelectorAll('.scenario-buttons button,.filters button,.reader-open,.nav a')){const r=button.getBoundingClientRect();check(r.height>=43,'control target '+width+' / '+button.textContent);}
-   const first=d.querySelector('.reader-open');first.click();const dialog=$('reader').getBoundingClientRect();
+   const first=d.querySelector('.reader-open');first.focus({preventScroll:true});first.click();const dialog=$('reader').getBoundingClientRect();
    check(dialog.left>=-1&&dialog.right<=frame.clientWidth+1&&dialog.height<=frame.clientHeight+1,'dialog viewport '+width);
    check(d.activeElement===$('reader-close'),'dialog initial focus '+width);
-   $('reader-close').click();await tick();check(d.activeElement===first,'dialog focus return '+width);
+   $('reader-close').click();check(d.activeElement===first,'dialog focus return immediately '+width);await tick();check(d.activeElement===first,'dialog focus return after close '+width);
  }
  check(d.querySelector('main#main')!==null&&d.querySelectorAll('h1').length===1,'semantic landmarks');
  if(w.matchMedia('(prefers-reduced-motion: reduce)').matches){
@@ -98,7 +98,7 @@ async function run(){
  let visualCount=0,frameCount=0;const smode=()=>s('live-stage').dataset.mode;
  while(frameCount++<100){
    check(!s('live-text').hidden,'text action available '+smode());
-   if(smode()==='focus'){const lens=sd.querySelector('.r-chapter:not([hidden]) .live-lens-body'),visual=lens.querySelector('.research-visual'),full=lens.querySelector('[data-full-text]');check(visual&&full&&!full.open,'visual first, text closed '+visualCount);check(visual.getBoundingClientRect().height>0,'visible visual');check(full.querySelector('.r-detail'),'full original text present');s('live-text').click();check(full.open,'text opens in same stage '+visualCount);s('live-text').click();check(!full.open,'text closes '+visualCount);visualCount++;}
+   if(smode()==='focus'){const lens=sd.querySelector('.r-chapter:not([hidden]) .live-lens-body'),visual=lens.querySelector('.research-visual'),full=lens.querySelector('[data-full-text]');check(visual&&full&&!full.open,'visual first, text closed '+visualCount);check(visual.getBoundingClientRect().height>0,'visible visual');if(visualCount===6){const fill=visual.querySelector('.rv-track i');check(fill?.style.getPropertyValue('--width')==='41%','survey bars use 100% scale');}check(full.querySelector('.r-detail'),'full original text present');s('live-text').click();check(full.open,'text opens in same stage '+visualCount);s('live-text').click();check(!full.open,'text closes '+visualCount);visualCount++;}
    else {s('live-text').click();check(s('live-dialog').open,'text dialog '+smode());s('live-dialog-close').click();await tick();}
    if(smode()==='final')break;s('r-next').click();
  }

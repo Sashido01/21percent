@@ -19,13 +19,14 @@ function highlight(node,value,query){
 }
 const reader=$('reader');let readerTrigger=null;
 function openReader(item,trigger){
- readerTrigger=trigger;$('reader-category').textContent=categoryNames[item.category];$('reader-title').textContent=item.title;$('reader-source').href=BASE+item.path;
+ readerTrigger=trigger;trigger.focus({preventScroll:true});$('reader-category').textContent=categoryNames[item.category];$('reader-title').textContent=item.title;$('reader-source').href=BASE+item.path;
  // Treat all source text as text, never inject Markdown or HTML into the DOM.
  const body=$('reader-body');body.replaceChildren();let list=null;
  for(const raw of previews[item.path].split('\n')){const line=raw.trim();if(!line){list=null;continue;}const clean=s=>s.replace(/\*\*([^*]+)\*\*/g,'$1').replace(/\[([^\]]+)\]\([^)]+\)/g,'$1').replace(/\x60([^\x60]+)\x60/g,'$1');if(/^#\s/.test(line))continue;const heading=line.match(/^#{2,6}\s+(.+)/);if(heading){body.append(el('h3',clean(heading[1])));list=null;continue;}const bullet=line.match(/^[-*]\s+(.+)/);const numbered=line.match(/^\d+\.\s+(.+)/);if(bullet||numbered){const tag=bullet?'ul':'ol';if(!list||list.tagName.toLowerCase()!==tag){list=el(tag);body.append(list);}list.append(el('li',clean((bullet||numbered)[1])));continue;}list=null;body.append(el('p',clean(line)));}
  reader.showModal();$('reader-close').focus();
 }
-$('reader-close').addEventListener('click',()=>reader.close());reader.addEventListener('close',()=>{if(readerTrigger?.isConnected)readerTrigger.focus();});
+function restoreReaderFocus(){if(reader.open)return;const trigger=readerTrigger;readerTrigger=null;if(trigger?.isConnected)trigger.focus({preventScroll:true});}
+$('reader-close').addEventListener('click',()=>{reader.close();restoreReaderFocus()});reader.addEventListener('close',restoreReaderFocus);
 function itemCard(item,isProject=false){
  const card=el('article',undefined,isProject?'project':'resource');const key=isProject?projectKeys[projects.indexOf(item)]:item.category;
  card.dataset.kind=key;const head=el('div',undefined,'card-top');head.append(glyph(key),el('span',isProject?item.status:categoryNames[item.category],'micro'));card.append(head);
