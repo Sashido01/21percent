@@ -70,7 +70,7 @@ async function run(){
  check(rd.body.classList.contains('live-ready')&&rd.body.dataset.modelsReady==='true','living canvas and models initialized');
  const mode=()=>r('live-stage').dataset.mode,shown=()=>rd.querySelectorAll('.live-node:not([hidden])').length;
  const next=()=>r('r-next').click();
- check(mode()==='start'&&shown()===0,'start with core only');next();check(mode()==='map'&&shown()===1,'adds exactly one node');next();check(mode()==='focus'&&!r('essence').hidden&&r('future').hidden,'focus essence');
+ check(mode()==='start'&&shown()===0&&r('live-count').textContent.startsWith('01 /')&&r('r-next').textContent==='Начать →'&&r('step-label').textContent.includes('ВСТУПЛЕНИЕ'),'start fully renders with core only');next();check(mode()==='map'&&shown()===1,'adds exactly one node');next();check(mode()==='focus'&&!r('essence').hidden&&r('future').hidden,'focus essence');
  check(r('live-world').style.transform.includes('scale(1.16)'),'camera focus');check(rd.querySelectorAll('#essence [data-live-step]').length===1,'one link visible');const firstLink=rd.querySelector('#essence [data-live-step="0"]');next();check(rd.querySelectorAll('#essence [data-live-step]').length===2&&rd.querySelector('#essence [data-live-step="0"]')===firstLink,'second link added without replacing first');
  next();check(mode()==='return'&&shown()===1&&rd.querySelector('.live-node.complete'),'return preserves node');next();check(mode()==='map'&&shown()===2,'second branch added');next();check(!r('future').hidden,'future follows essence');
  r('show-all').click();check(mode()==='overview'&&shown()===2,'map shows cumulative nodes');r('show-all').click();check(mode()==='focus','resume focus');
