@@ -32,6 +32,9 @@ VIEWS = [
     ("mobile-home", 390, 844, ""),
     ("mobile-practice", 390, 844, "#practice"),
     ("narrow-home", 320, 800, ""),
+    ("ruble-opening-desktop", 1440, 900, "ruble/"),
+    ("ruble-opening-projector", 896, 500, "ruble/"),
+    ("ruble-opening-mobile", 390, 844, "ruble/"),
 ]
 def ensure(ok, msg):
     if not ok:
@@ -215,7 +218,7 @@ def capture(chrome,url,dest,w,h,profile,anchor):
         deadline=time.monotonic()+20
         ready=False
         while time.monotonic()<deadline:
-            ready=dev.evaluate("document.readyState==='complete' && !!document.querySelector('#resource-grid .reader-open') && [6,7].includes(document.querySelector('#resource-grid').children.length)")
+            ready=dev.evaluate("document.readyState==='complete' && (document.body.classList.contains('live-ready') || (!!document.querySelector('#resource-grid .reader-open') && [6,7].includes(document.querySelector('#resource-grid').children.length)))")
             if ready: break
             time.sleep(.15)
         ensure(ready,"Portal did not initialize before screenshot")
@@ -267,12 +270,14 @@ def main():
         with serve(ROOT/"docs") as current_url:
             for name,w,h,anchor in VIEWS:
                 path=out/(name+".png")
-                current=capture(chrome,current_url,path,w,h,tmp/("profile-"+name),anchor)
+                route=anchor if anchor=="ruble/" else ""
+                section="" if route else anchor
+                current=capture(chrome,current_url+route,path,w,h,tmp/("profile-"+name),section)
                 record={"view":name,"width":w,"height":h,"sha256":hashlib.sha256(path.read_bytes()).hexdigest()}
                 if base_dir:
                     with serve(base_dir) as old_url:
                         previous_path=out/("baseline-"+name+".png")
-                        previous=capture(chrome,old_url,previous_path,w,h,tmp/("baseline-"+name),anchor)
+                        previous=capture(chrome,old_url+route,previous_path,w,h,tmp/("baseline-"+name),section)
                     record["changed_pixels_percent"]=diff_pct(current,previous)
                 report["views"].append(record)
                 print(name,record,flush=True)

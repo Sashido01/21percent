@@ -46,6 +46,7 @@ def probe(expect_current):
         ASSETS['ruble/visuals.mjs'] = ASSETS['portal/app.mjs']
         ASSETS['portal/research-visuals.mjs'] = ASSETS['portal/app.mjs']
         ASSETS['ruble/ruble.css'] = {'text/css'}
+        ASSETS['ruble/opening.css'] = {'text/css'}
         ASSETS['ruble/ruble.mjs'] = ASSETS['portal/app.mjs']
         ASSETS['portal/research-route.mjs'] = ASSETS['portal/app.mjs']
         ASSETS['portal/research-canvas.css'] = {'text/css'}
