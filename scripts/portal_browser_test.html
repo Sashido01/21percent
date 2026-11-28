@@ -67,7 +67,7 @@ async function run(){
  const loaded=new Promise(resolve=>rr.addEventListener('load',resolve,{once:true}));rr.src='ruble/index.html';document.body.append(rr);await loaded;
  const rd=rr.contentDocument,rw=rr.contentWindow,r=id=>rd.getElementById(id);
  for(let i=0;i<40&&!rd.body.classList.contains('live-ready');i++)await tick();
- check(rd.body.classList.contains('live-ready'),'living canvas initialized');
+ check(rd.body.classList.contains('live-ready')&&rd.body.dataset.modelsReady==='true','living canvas and models initialized');
  const mode=()=>r('live-stage').dataset.mode,shown=()=>rd.querySelectorAll('.live-node:not([hidden])').length;
  const next=()=>r('r-next').click();
  check(mode()==='start'&&shown()===0,'start with core only');next();check(mode()==='map'&&shown()===1,'adds exactly one node');next();check(mode()==='focus'&&!r('essence').hidden&&r('future').hidden,'focus essence');
@@ -75,7 +75,7 @@ async function run(){
  next();check(mode()==='return'&&shown()===1&&rd.querySelector('.live-node.complete'),'return preserves node');next();check(mode()==='map'&&shown()===2,'second branch added');next();check(!r('future').hidden,'future follows essence');
  r('show-all').click();check(mode()==='overview'&&shown()===2,'map shows cumulative nodes');r('show-all').click();check(mode()==='focus','resume focus');
  const route=(i,s=0)=>{r('live-chapters').click();rd.querySelector('[data-jump="'+i+'"]').click();for(let j=0;j<s;j++)next();};
- route(3);for(let i=0;i<3;i++)r('wallet-action').click();check(r('wallet-balance').textContent==='650 ₽','ruble wallet purchase');r('wallet-action').click();check(r('wallet-balance').textContent==='0 ₽'&&r('bank-balance').textContent.includes('650'),'ruble wallet refund');
+ route(3);check(!r('use').hidden&&r('use').querySelector('.live-lens-body').contains(r('wallet-action')),'wallet mounted in selected lens');const walletValues=[r('wallet-balance').textContent];for(let i=0;i<3;i++){r('wallet-action').click();walletValues.push(r('wallet-balance').textContent)}check(r('wallet-balance').textContent==='650 ₽','ruble wallet purchase: '+walletValues.join(' → '));r('wallet-action').click();check(r('wallet-balance').textContent==='0 ₽'&&r('bank-balance').textContent.includes('650'),'ruble wallet refund');
  route(4,1);check(r('transfer-result').textContent.includes('750'),'ruble transfer fee');r('t-top').value='300000';r('t-top').dispatchEvent(new rw.Event('input',{bubbles:true}));check(r('transfer-result').textContent.includes('Недостаточно'),'ruble transfer limit');
  route(5,1);check(r('business-result').textContent.includes('Не окупается'),'ruble cash comparison');const old=r('business-result').textContent;r('b-period').value='2026';r('b-period').dispatchEvent(new rw.Event('change',{bubbles:true}));check(old!==r('business-result').textContent,'ruble business tariff year');
  r('b-ticket').value='-1';r('b-ticket').dispatchEvent(new rw.Event('input',{bubbles:true}));check(r('business-result').textContent.includes('Некорректный'),'ruble invalid input');r('b-ticket').value='1500';r('b-ticket').dispatchEvent(new rw.Event('input',{bubbles:true}));r('show-all').click();r('show-all').click();check(r('b-period').value==='2026','calculator state retained');
