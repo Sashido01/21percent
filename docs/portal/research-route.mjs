@@ -81,7 +81,7 @@ export function initResearchRoute({summaries=[]}={}){
  function jump(b,s=0){go(session.focusIndex(b,s));}
  function move(delta){if(dialog.open){dialog.close();return}if(question||questionList){question=null;questionList=false;updateHash('#'+data[session.frame.b].chapter.id);render();return}if(overview){overview=false;render();return}go(session.pos+delta);}
  function map(){if(session.pos===0)return;overview=!overview;question=null;questionList=false;render();}
- function openQuestion(q){const current=session.frame,b=q.b;if(current.mode!=='focus'||current.b!==b){const seen=[...session.revealed[b]];jump(b,seen.length?Math.max(...seen):0)}overview=false;question=q;questionList=false;updateHash('#'+q.node.id);render();}
+ function openQuestion(q){const current=session.frame,b=q.b;if(current.mode!=='focus'||current.b!==b){const seen=[...session.revealed[b]];session.go(session.focusIndex(b,seen.length?Math.max(...seen):0));}overview=false;question=q;questionList=false;updateHash('#'+q.node.id);render();}
  function closePanel(){if(panel){main.insertBefore(panel,dialog);panel=null;}dialogBody.replaceChildren();if(opener?.isConnected)opener.focus({preventScroll:true});opener=null;}
  dialog.addEventListener('close',()=>{if(!dialog.open)closePanel()});$('live-dialog-close').onclick=()=>dialog.close();
  function openPanel(title,content,isPanel=false){if(dialog.open){dialog.close();closePanel()}opener=document.activeElement;$('live-dialog-title').textContent=title;dialogBody.replaceChildren(content);if(isPanel)panel=content;dialog.showModal();dialog.scrollTop=0;$('live-dialog-close').focus();}
@@ -97,5 +97,5 @@ export function initResearchRoute({summaries=[]}={}){
  search.addEventListener('input',renderQuestions);$('faq-clear').onclick=()=>{search.value='';renderQuestions();search.focus()};
  addEventListener('hashchange',followHash);addEventListener('resize',geometry);
  addEventListener('keydown',e=>{if(dialog.open||e.altKey||e.ctrlKey||e.metaKey||/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)||e.target.isContentEditable)return;if(['ArrowRight','PageDown'].includes(e.key)){e.preventDefault();move(1)}else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();move(-1)}else if(e.key.toLowerCase()==='m'||e.key.toLowerCase()==='ь'){e.preventDefault();map()}});
- document.body.classList.add('live-ready');world.hidden=false;$('r-navigation').hidden=false;$('live-chapters').hidden=false;$('live-full').hidden=false;render();if(location.hash)followHash();
+ document.body.classList.add('live-ready');world.hidden=false;$('r-navigation').hidden=false;$('live-chapters').hidden=false;$('live-full').hidden=false;render();if(location.hash){try{followHash();}catch(e){main.dataset.linkError=String(e);throw e;}}
 }
