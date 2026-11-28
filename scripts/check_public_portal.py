@@ -44,6 +44,8 @@ def probe(expect_current):
         ASSETS['ruble/index.html'] = {'text/html'}
         ASSETS['ruble/ruble.css'] = {'text/css'}
         ASSETS['ruble/ruble.mjs'] = ASSETS['portal/app.mjs']
+        ASSETS['portal/research-route.mjs'] = ASSETS['portal/app.mjs']
+        ASSETS['portal/research-search.mjs'] = ASSETS['portal/app.mjs']
         ASSETS['ruble/questions/index.html'] = {'text/html'}
         ASSETS['ruble/questions/questions.css'] = {'text/css'}
         ASSETS['ruble/questions/questions.mjs'] = ASSETS['portal/app.mjs']
@@ -59,8 +61,8 @@ def probe(expect_current):
     check(html_version and js_version and html_version.group(1) == js_version.group(1),
           "Inconsistent deployed versions")
     if expect_current:
-        check('href="ruble/"' in html and 'href="ruble/questions/"' in html, 'Missing research navigation')
-        check('data-faq-item' in assets['ruble/questions/index.html'][0].decode('utf-8'), 'Missing FAQ content')
+        check('id="research-catalog"' in html and 'id="research-feed"' in html and 'href="ruble/"' in html, 'Missing catalog/feed navigation')
+        check('data-faq-item' in assets['ruble/index.html'][0].decode('utf-8'), 'Missing integrated question content')
         expected = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
         check(html_version.group(1) == expected,
               f"Deployment still serves {html_version.group(1)}, expected {expected}")
