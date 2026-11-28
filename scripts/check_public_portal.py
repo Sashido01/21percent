@@ -41,6 +41,9 @@ def probe(expect_current):
     if expect_current:
         ASSETS['portal/previews.mjs'] = ASSETS['portal/app.mjs']
         ASSETS['portal/social-preview.png'] = {'image/png'}
+        ASSETS['ruble/index.html'] = {'text/html'}
+        ASSETS['ruble/ruble.css'] = {'text/css'}
+        ASSETS['ruble/ruble.mjs'] = ASSETS['portal/app.mjs']
     paths = list(ASSETS)
     assets = {path: fetch(path, nonce) for path in paths}
     html = assets[""][0].decode("utf-8")
