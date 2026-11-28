@@ -1,16 +1,16 @@
-export const VERSION = '0.0.18';
+export const VERSION = '0.0.19';
 export const BASE = 'https://github.com/Sashido01/21percent/blob/main/';
 export const researchPublications = [
   {
     "id": "ruble",
     "title": "Цифровой рубль",
-    "description": "Что это, зачем нужен, СБП, экономика, безопасность и будущее. 51 вопрос внутри живой карты с раскрытием связей.",
+    "description": "Визуальная презентация: 24 сцены и 60 шагов. Затем — подробная карта, 51 вопрос, модели и источники.",
     "date": "2026-11-28",
     "category": "Деньги и платежи",
     "page": "ruble/",
     "format": "interactive",
     "keywords": "цифровой рубль СБП пенсия зарплата комиссии кошелёк безопасность бизнес будущее",
-    "questionAnchor": "#question-index",
+    "questionAnchor": "detail.html#question-index",
     "sourceChecks": [
       {
         "source": "cbr",
