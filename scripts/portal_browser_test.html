@@ -8,7 +8,7 @@ async function run(){
  check(!$('library-controls').hidden,'app initialized');
  check($('resource-grid').children.length===7,'initial library');
  check(d.querySelector('.nav a[href="#research"]')&&d.querySelector('.nav a[href="#feed"]')&&d.querySelector('#research-catalog a[href="ruble/"]')&&d.querySelector('#research-feed a[href="ruble/"]')&&!d.querySelector('.featured-research'),'catalog and feed navigation');
- $('search').value='цифровой рубль';$('search').dispatchEvent(new w.Event('input',{bubbles:true}));check($('resource-grid').children.length===1&&$('resource-grid').querySelector('a[href="ruble/"]')&&$('resource-grid').querySelector('a[href="ruble/detail.html#question-index"]'),'ruble library search and direct links');$('clear-search').click();
+ $('search').value='цифровой рубль';$('search').dispatchEvent(new w.Event('input',{bubbles:true}));check($('resource-grid').children.length===1&&$('resource-grid').querySelector('a[href="ruble/"]')&&$('resource-grid').querySelector('a[href="ruble/#question-index"]'),'ruble library search and direct links');$('clear-search').click();
  const read=d.querySelector('.reader-open');read.click();check($('reader').open&&$('reader-body').textContent.length>100,'reader content');$('reader-close').click();check(!$('reader').open,'reader close');
  check(d.querySelectorAll('.project .card-glyph').length===6,'initiative identities');
  check(!$('core-preview').hidden&&$('signal-map').dataset.module==='research','core initial');
@@ -50,10 +50,10 @@ async function run(){
    const rects=Array.from(d.querySelectorAll('.node')).map(n=>n.getBoundingClientRect()),map=$('signal-map').getBoundingClientRect();
    rects.forEach((r,i)=>{check(r.height>=43&&r.width>=44,'node target '+width+' / '+i);check(r.left>=map.left-1&&r.right<=map.right+1&&r.top>=map.top-1&&r.bottom<=map.bottom+1,'node clipped '+width+' / '+i);for(let j=i+1;j<rects.length;j++)check(!overlap(r,rects[j]),'node overlap '+width+' / '+i+' / '+j);});
    for(const button of d.querySelectorAll('.scenario-buttons button,.filters button,.reader-open,.nav a')){const r=button.getBoundingClientRect();check(r.height>=43,'control target '+width+' / '+button.textContent);}
-   const first=d.querySelector('.reader-open');first.click();const dialog=$('reader').getBoundingClientRect();
+   const first=d.querySelector('.reader-open');first.focus({preventScroll:true});first.click();const dialog=$('reader').getBoundingClientRect();
    check(dialog.left>=-1&&dialog.right<=frame.clientWidth+1&&dialog.height<=frame.clientHeight+1,'dialog viewport '+width);
    check(d.activeElement===$('reader-close'),'dialog initial focus '+width);
-   $('reader-close').click();await tick();check(d.activeElement===first,'dialog focus return '+width);
+   $('reader-close').click();check(d.activeElement===first,'dialog focus return immediately '+width);await tick();check(d.activeElement===first,'dialog focus return after close '+width);
  }
  check(d.querySelector('main#main')!==null&&d.querySelectorAll('h1').length===1,'semantic landmarks');
  if(w.matchMedia('(prefers-reduced-motion: reduce)').matches){
@@ -64,17 +64,17 @@ async function run(){
 
  // Living research: actual spatial sequence, persistent state and models.
  const rr=document.createElement('iframe');rr.title='Ruble test';rr.width='1280';rr.height='900';
- const loaded=new Promise(resolve=>rr.addEventListener('load',resolve,{once:true}));rr.src='ruble/detail.html';document.body.append(rr);await loaded;
+ const loaded=new Promise(resolve=>rr.addEventListener('load',resolve,{once:true}));rr.src='ruble/index.html';document.body.append(rr);await loaded;
  const rd=rr.contentDocument,rw=rr.contentWindow,r=id=>rd.getElementById(id);
  for(let i=0;i<40&&!rd.body.classList.contains('live-ready');i++)await tick();
  check(rd.body.classList.contains('live-ready')&&rd.body.dataset.modelsReady==='true','living canvas and models initialized');
  const mode=()=>r('live-stage').dataset.mode,shown=()=>rd.querySelectorAll('.live-node:not([hidden])').length;
  const next=()=>r('r-next').click();
  check(mode()==='start'&&shown()===0&&r('live-count').textContent.startsWith('01 /')&&r('r-next').textContent==='Начать →'&&r('step-label').textContent.includes('ВСТУПЛЕНИЕ'),'start fully renders with core only');next();check(mode()==='map'&&shown()===1,'adds exactly one node');next();check(mode()==='focus'&&!r('essence').hidden&&r('future').hidden,'focus essence');
- check(r('live-world').style.transform.includes('scale(1.16)'),'camera focus');check(rd.querySelectorAll('#essence [data-live-step]').length===1,'one link visible');const firstLink=rd.querySelector('#essence [data-live-step="0"]');next();check(rd.querySelectorAll('#essence [data-live-step]').length===2&&rd.querySelector('#essence [data-live-step="0"]')===firstLink,'second link added without replacing first');
+ check(r('live-world').style.transform.includes('scale(1.16)'),'camera focus');check(rd.querySelector('#essence .research-visual')&&!rd.querySelector('#essence [data-full-text]').open,'original canvas visual first');check(rd.querySelectorAll('#essence [data-live-step]').length===1,'one link visible');const firstLink=rd.querySelector('#essence [data-live-step="0"]');next();check(rd.querySelectorAll('#essence [data-live-step]').length===2&&rd.querySelector('#essence [data-live-step="0"]')===firstLink,'second link added without replacing first');
  next();check(mode()==='return'&&shown()===1&&rd.querySelector('.live-node.complete'),'return preserves node');next();check(mode()==='map'&&shown()===2,'second branch added');next();check(!r('future').hidden,'future follows essence');
  r('show-all').click();check(mode()==='overview'&&shown()===2,'map shows cumulative nodes');r('show-all').click();check(mode()==='focus','resume focus');
- const route=(i,s=0)=>{r('live-chapters').click();rd.querySelector('[data-jump="'+i+'"]').click();for(let j=0;j<s;j++)next();};
+ const route=(i,s=0)=>{r('live-chapters').click();rd.querySelector('[data-jump="'+i+'"]').click();for(let j=0;j<s;j++)next();const view=rd.querySelector('.r-chapter:not([hidden]) [data-full-text]');if(view&&!view.open)view.open=true;};
  route(3);check(!r('use').hidden&&r('use').querySelector('.live-lens-body').contains(r('wallet-action')),'wallet mounted in selected lens');const walletValues=[r('wallet-balance').textContent];for(let i=0;i<3;i++){r('wallet-action').click();walletValues.push(r('wallet-balance').textContent)}check(r('wallet-balance').textContent==='650 ₽','ruble wallet purchase: '+walletValues.join(' → '));r('wallet-action').click();check(r('wallet-balance').textContent==='0 ₽'&&r('bank-balance').textContent.includes('650'),'ruble wallet refund');
  route(4,1);check(r('transfer-result').textContent.includes('750'),'ruble transfer fee');r('t-top').value='300000';r('t-top').dispatchEvent(new rw.Event('input',{bubbles:true}));check(r('transfer-result').textContent.includes('Недостаточно'),'ruble transfer limit');
  route(5,1);check(r('business-result').textContent.includes('Не окупается'),'ruble cash comparison');const old=r('business-result').textContent;r('b-period').value='2026';r('b-period').dispatchEvent(new rw.Event('change',{bubbles:true}));check(old!==r('business-result').textContent,'ruble business tariff year');
@@ -91,12 +91,19 @@ async function run(){
  const ff=document.createElement('iframe');ff.title='Legacy question link';ff.width='1280';ff.height='900';const loadedLegacy=new Promise(resolve=>{ff.addEventListener('load',()=>{if(ff.contentDocument?.getElementById('live-stage'))resolve()});});ff.src='ruble/questions/index.html#q-freeze';document.body.append(ff);await loadedLegacy;for(let i=0;i<30&&!ff.contentDocument?.getElementById('q-freeze')?.open;i++)await tick();const fd=ff.contentDocument;check(fd.getElementById('q-freeze')?.open&&!fd.getElementById('risks').hidden,'legacy link reaches question: '+fd.URL+' / '+fd.body.className+' / '+fd.getElementById('main')?.dataset.linkError+' / '+fd.getElementById('live-stage')?.dataset.mode);
  for(const width of [320,390,768,1024,1440]){rr.width=String(width);await tick();await tick();check(rd.documentElement.scrollWidth<=rr.clientWidth+2,'canvas overflow '+width);const lens=rd.querySelector('#essence .live-lens').getBoundingClientRect(),footer=r('r-navigation').getBoundingClientRect();check(lens.width>0&&lens.height>0&&lens.right<=rr.clientWidth+2&&lens.bottom<=footer.top+2,'focus panel visible '+width);r('show-all').click();await tick();check(mode()==='overview','overview '+width);check(rd.documentElement.scrollWidth<=rr.clientWidth+2,'overview overflow '+width);r('show-all').click();}
 
- const tf=document.createElement('iframe');tf.title='Visual talk';tf.width='1280';tf.height='900';const tl=new Promise(resolve=>tf.addEventListener('load',resolve,{once:true}));tf.src='ruble/index.html';document.body.append(tf);await tl;const td=tf.contentDocument,t=id=>td.getElementById(id);
- check(td.body.classList.contains('talk-ready'),'visual talk initialized');check(t('main').dataset.mode==='start','visual first');check(td.querySelectorAll('.talk-node:not([hidden])').length===0,'starts with core only');
- t('talk-next').click();check(t('main').dataset.mode==='scene'&&td.querySelectorAll('.talk-node:not([hidden])').length===1,'first visual node');
- const scene=td.querySelector('.talk-scene:not([hidden])');check(scene.dataset.revealCount==='1','first reveal');t('talk-next').click();check(scene.dataset.revealCount==='2'&&!scene.hidden,'second detail on same scene');t('talk-overview-button').click();check(t('main').dataset.mode==='overview','talk map');t('talk-overview-button').click();check(t('main').dataset.mode==='scene'&&scene.dataset.revealCount==='2','talk resume');
- for(const width of [320,390,768,1024,1440]){tf.width=String(width);await tick();check(td.documentElement.scrollWidth<=tf.clientWidth+2,'talk overflow '+width);const visual=td.querySelector('.talk-scene:not([hidden]) .talk-visual').getBoundingClientRect();check(visual.width>0&&visual.height>0,'talk visual '+width);}
- for(let i=0;i<100&&t('main').dataset.mode!=='final';i++)t('talk-next').click();check(t('main').dataset.mode==='final'&&td.querySelectorAll('.talk-node:not([hidden])').length===12,'talk final whole map');check(t('talk-deep').getAttribute('href')==='detail.html','detailed study after talk');
+
+ // Single approved map: all steps have a visual and text on demand.
+ const sf=document.createElement('iframe');sf.title='Visual-first original map';sf.width='1280';sf.height='900';const sl=new Promise(resolve=>sf.addEventListener('load',resolve,{once:true}));sf.src='ruble/index.html';document.body.append(sf);await sl;const sd=sf.contentDocument,s=id=>sd.getElementById(id);
+ check(sd.body.classList.contains('live-ready'),'single living map initialized');
+ let visualCount=0,frameCount=0;const smode=()=>s('live-stage').dataset.mode;
+ while(frameCount++<100){
+   check(!s('live-text').hidden,'text action available '+smode());
+   if(smode()==='focus'){const lens=sd.querySelector('.r-chapter:not([hidden]) .live-lens-body'),visual=lens.querySelector('.research-visual'),full=lens.querySelector('[data-full-text]');check(visual&&full&&!full.open,'visual first, text closed '+visualCount);check(visual.getBoundingClientRect().height>0,'visible visual');if(visualCount===6){const fill=visual.querySelector('.rv-track i');check(fill?.style.getPropertyValue('--width')==='41%','survey bars use 100% scale');}check(full.querySelector('.r-detail'),'full original text present');s('live-text').click();check(full.open,'text opens in same stage '+visualCount);s('live-text').click();check(!full.open,'text closes '+visualCount);visualCount++;}
+   else {s('live-text').click();check(s('live-dialog').open,'text dialog '+smode());s('live-dialog-close').click();await tick();}
+   if(smode()==='final')break;s('r-next').click();
+ }
+ check(visualCount===32&&smode()==='final','all 32 visual steps and final');
+ const legacyDetail=document.createElement('iframe');legacyDetail.title='Previous detail address';legacyDetail.width='1280';legacyDetail.height='900';const oldLoad=new Promise(resolve=>legacyDetail.addEventListener('load',()=>{if(legacyDetail.contentDocument?.getElementById('live-stage'))resolve()}));legacyDetail.src='ruble/detail.html#q-freeze';document.body.append(legacyDetail);await oldLoad;check(legacyDetail.contentDocument.getElementById('q-freeze').open,'old detail address redirects to question');
  out.textContent='PASS: portal browser interactions, five-width visual geometry, focus and contrast';
 }
 frame.addEventListener('load',()=>run().catch(e=>out.textContent='FAIL: '+e.message),{once:true});

@@ -32,6 +32,8 @@ HISTORICAL = {
 VERSION = re.compile(r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\Z")
 SHA = re.compile(r"[0-9a-f]{40}\Z")
 MANAGED = re.compile(r"(?:feature|design|qa|fix|docs|chore|release)/[A-Za-z0-9][A-Za-z0-9._/-]*\Z")
+# Explicitly reviewed duplicate, not a general rule for closed PRs.
+SUPERSEDED = {19: ("feature/unified-visual-research", "98ff4ee772b45231f2382ee5e5a828b6ec55012a", 18)}
 
 def git(*args):
     return subprocess.check_output(["git", *args], text=True, timeout=90).strip()
@@ -101,6 +103,35 @@ def eligible_branch(branch, pr, open_heads, main_trees, tree_of, merge_base_of):
     except subprocess.CalledProcessError:
         return None
     return None
+
+def superseded_branch(branch, pr, open_heads, main_trees, closed_prs, tree_of, quality_of):
+    """Delete only an explicitly reviewed duplicate after its replacement passes main CI."""
+    rule = SUPERSEDED.get(pr.get("number"))
+    if not rule:
+        return None
+    name, sha, replacement = rule
+    if (branch.get("name") != name or branch.get("commit", {}).get("sha") != sha
+            or branch.get("protected") or name == DEFAULT or name in open_heads
+            or pr.get("state") != "closed" or pr.get("merged_at")):
+        return None
+    def same_repo(p):
+        return ((p.get("head", {}).get("repo") or {}).get("full_name") == REPO
+                and (p.get("base", {}).get("repo") or {}).get("full_name") == REPO
+                and p.get("base", {}).get("ref") == DEFAULT)
+    if not same_repo(pr) or pr.get("head", {}).get("ref") != name or pr.get("head", {}).get("sha") != sha:
+        return None
+    successor = next((p for p in closed_prs if p.get("number") == replacement), None)
+    if not successor or successor.get("state") != "closed" or not successor.get("merged_at") or not same_repo(successor):
+        return None
+    merge = successor.get("merge_commit_sha")
+    if merge not in main_trees:
+        return None
+    try:
+        if tree_of(successor["head"]["sha"]) != main_trees[merge][0] or not quality_of(merge):
+            return None
+    except (subprocess.CalledProcessError, KeyError):
+        return None
+    return f"reviewed duplicate PR #{pr['number']} replaced by verified PR #{replacement}"
 
 def current_tags():
     out = git("ls-remote", "--tags", "origin")
@@ -206,7 +237,9 @@ def main():
         reason = next((r for p in candidates if (r := eligible_branch(branch,p,open_heads,main_trees,tree,
                       lambda c: git("merge-base",c,tip)))), None)
         if not reason:
-            lines.append(f"KEEP branch {name}: no safe integration proof")
+            reason = next((r for p in candidates if (r := superseded_branch(branch,p,open_heads,main_trees,closed,tree,quality_passed))), None)
+        if not reason:
+            lines.append(f"KEEP branch {name}: no safe integration or replacement proof")
             continue
         if not args.apply:
             lines.append(f"DRY RUN delete {name}: {reason}")

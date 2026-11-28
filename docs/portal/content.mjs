@@ -1,16 +1,16 @@
-export const VERSION = '0.0.19';
+export const VERSION = '0.0.20';
 export const BASE = 'https://github.com/Sashido01/21percent/blob/main/';
 export const researchPublications = [
   {
     "id": "ruble",
     "title": "Цифровой рубль",
-    "description": "Визуальная презентация: 24 сцены и 60 шагов. Затем — подробная карта, 51 вопрос, модели и источники.",
+    "description": "Единая живая карта: 12 веток, 32 визуальные схемы, 51 вопрос. Полный текст и модели раскрываются на каждом этапе.",
     "date": "2026-11-28",
     "category": "Деньги и платежи",
     "page": "ruble/",
     "format": "interactive",
     "keywords": "цифровой рубль СБП пенсия зарплата комиссии кошелёк безопасность бизнес будущее",
-    "questionAnchor": "detail.html#question-index",
+    "questionAnchor": "#question-index",
     "sourceChecks": [
       {
         "source": "cbr",

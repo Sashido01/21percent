@@ -45,6 +45,23 @@ class MaintenanceTests(unittest.TestCase):
     def test_fork(self):
         self.pr["head"]["repo"]["full_name"]="other/repo"
         self.assertIsNone(self.decide())
+    def test_explicit_superseded_branch(self):
+        successor={"number":18,"state":"closed","merged_at":"time","merge_commit_sha":self.merge,
+                   "head":{"ref":"feature/new","sha":"d"*40,"repo":{"full_name":m.REPO}},
+                   "base":{"ref":"main","repo":{"full_name":m.REPO}}}
+        with patch.object(m,"SUPERSEDED",{9:("design/test",self.sha,18)}):
+            def decide(opened=set(),quality=True,tree="tree"):
+                return m.superseded_branch(self.branch,self.pr,opened,self.trees,[successor],
+                                           lambda _:tree,lambda _:quality)
+            self.assertIn("verified PR #18",decide())
+            self.assertIsNone(decide({"design/test"}))
+            self.assertIsNone(decide(quality=False))
+            self.assertIsNone(decide(tree="different"))
+            successor["merged_at"]=None
+            self.assertIsNone(decide())
+            successor["merged_at"]="time"
+            self.branch["commit"]["sha"]="e"*40
+            self.assertIsNone(decide())
     def test_tag_states(self):
         ref="refs/tags/v0.0.12"
         self.assertEqual(m.tag_status({}, "0.0.12",self.sha),"missing")

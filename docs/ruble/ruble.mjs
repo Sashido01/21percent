@@ -1,4 +1,5 @@
 import {initResearchRoute} from '../portal/research-route.mjs';
+import {rubleVisuals} from './visuals.mjs';
 export const rub = n => new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:2}).format(n);
 export function transferCost(used,amount,balance,top){const available=Math.max(0,100000-used);return {fee:Math.min(1500,Math.max(0,amount-available)*.005),possible:amount<=balance+Math.max(0,300000-top)}}
 export function businessCost({count,ticket,share,card,sbp,cash,setup,monthly,period}){const n=Math.round(count*share/100),volume=n*ticket,dr=n*Math.min(ticket*(period==='2026'?0:.003),1500),channels=[['Карта',volume*card/100],['СБП',n*Math.min(ticket*sbp/100,1500)],['Наличные',volume*cash/100]];return {n,volume,dr,channels:channels.map(([name,cost])=>{const effect=cost-dr-monthly;return {name,cost,effect,payback:effect>0?setup/effect:null}})}}
@@ -17,5 +18,5 @@ let flow=-1;const flowText=['Вы проверили сумму и получа�
 let a=false,b=false,s=false;function off(){const total=(Number(a)+Number(b))*800;$('off-result').replaceChildren();row('off-result','Принято локально',rub(total));row('off-result','Сверка',s?(total>1000?'Двойное расходование: дефицит '+rub(total-1000):'Остаток '+rub(1000-total)):'Не выполнена',s&&total>1000);$('off-a').disabled=a||s;$('off-b').disabled=b||s;$('off-sync').disabled=s||!total}$('off-a').addEventListener('click',()=>{a=true;off()});$('off-b').addEventListener('click',()=>{b=true;off()});$('off-sync').addEventListener('click',()=>{s=true;off()});$('off-reset').addEventListener('click',()=>{a=b=s=false;off()});off();
 document.querySelectorAll('.plan-check').forEach(c=>c.addEventListener('change',()=>{$('plan-progress').textContent=document.querySelectorAll('.plan-check:checked').length+' из 5 действий отмечено. Отметки не сохраняются после закрытия страницы.'}));
 document.body.dataset.modelsReady='true';
-initResearchRoute({summaries});
+initResearchRoute({summaries,visuals:rubleVisuals});
 }
