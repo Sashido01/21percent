@@ -1,0 +1,4 @@
+export const normalize = value => String(value).toLocaleLowerCase('ru-RU').replace(/ё/g,'е').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+const aliases={'айфон':'iphone','айфоне':'iphone','айфоны':'iphone','айос':'ios','кешбек':'кешбэк','кэшбэк':'кешбэк','кэшбек':'кешбэк','цр':'цифровой рубль','наличка':'наличные','наличку':'наличные','300 тысяч':'300 000','300 тыс':'300 000','крипта':'криптовалюта'};
+export function queryTokens(query){let s=' '+normalize(query)+' ';for(const [a,b] of Object.entries(aliases))s=s.replaceAll(' '+a+' ',' '+b+' ');return s.trim().split(' ').filter(Boolean).filter(t=>!['ли','как','что','если','мне','на','и','в','с','а','у','по','для','это','можно'].includes(t))}
+export function matches(text,query){const hay=normalize(text);return queryTokens(query).every(t=>hay.includes(t)||(t.length>=5&&hay.includes(t.slice(0,-2))))}
