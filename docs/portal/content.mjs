@@ -1,10 +1,10 @@
-export const VERSION = '0.0.17';
+export const VERSION = '0.0.18';
 export const BASE = 'https://github.com/Sashido01/21percent/blob/main/';
 export const researchPublications = [
   {
     "id": "ruble",
     "title": "Цифровой рубль",
-    "description": "Что это, зачем нужен, СБП, экономика, безопасность и будущее. 51 вопрос в общей динамической презентации.",
+    "description": "Что это, зачем нужен, СБП, экономика, безопасность и будущее. 51 вопрос внутри живой карты с раскрытием связей.",
     "date": "2026-11-28",
     "category": "Деньги и платежи",
     "page": "ruble/",

@@ -61,36 +61,35 @@ async function run(){
    check(w.getComputedStyle(d.querySelector('.orbital')).animationName==='none','reduced motion animation disabled');
  }
 
- // Public ruble research: verify actual page interaction without a separate browser dependency.
+
+ // Living research: actual spatial sequence, persistent state and models.
  const rr=document.createElement('iframe');rr.title='Ruble test';rr.width='1280';rr.height='900';
  const loaded=new Promise(resolve=>rr.addEventListener('load',resolve,{once:true}));rr.src='ruble/index.html';document.body.append(rr);await loaded;
  const rd=rr.contentDocument,rw=rr.contentWindow,r=id=>rd.getElementById(id);
- for(let i=0;i<40&&r('r-controls').hidden;i++)await tick();
- check(!r('r-controls').hidden,'ruble initialized');
- check(!r('essence').hidden&&r('future').hidden,'ruble starts with explanation');
- check(rd.querySelectorAll('[data-chapter]').length===12,'ruble chapters');
- r('r-next').click();check(r('essence').querySelectorAll('details.r-step[open]').length===2,'ruble cumulative detail');
- r('r-next').click();check(!r('future').hidden&&r('essence').hidden,'ruble future follows essence');
- check(r('progress-label').textContent==='2 / 12','ruble cumulative progress');
- r('r-prev').click();check(!r('essence').hidden&&r('essence').querySelectorAll('details.r-step[open]').length===2,'ruble retained detail');
- const route=i=>rd.querySelector('[data-route-index="'+i+'"]').click();
- route(3);for(let i=0;i<3;i++)r('wallet-action').click();
- check(r('wallet-balance').textContent==='650 ₽','ruble wallet purchase');r('wallet-action').click();check(r('wallet-balance').textContent==='0 ₽'&&r('bank-balance').textContent.includes('650'),'ruble wallet refund');
- route(4);check(r('transfer-result').textContent.includes('750'),'ruble transfer fee');
- r('t-top').value='300000';r('t-top').dispatchEvent(new rw.Event('input',{bubbles:true}));check(r('transfer-result').textContent.includes('Недостаточно'),'ruble transfer limit');
- route(5);check(r('business-result').textContent.includes('Не окупается'),'ruble cash comparison');
- const old=r('business-result').textContent;r('b-period').value='2026';r('b-period').dispatchEvent(new rw.Event('change',{bubbles:true}));check(old!==r('business-result').textContent,'ruble business tariff year');
- r('b-ticket').value='-1';r('b-ticket').dispatchEvent(new rw.Event('input',{bubbles:true}));check(r('business-result').textContent.includes('Некорректный'),'ruble invalid input');r('b-ticket').value='1500';r('b-ticket').dispatchEvent(new rw.Event('input',{bubbles:true}));
- route(7);for(let i=0;i<4;i++)r('flow-next').click();check(rd.querySelectorAll('[data-flow].lit').length===4,'ruble payment path');
- route(8);r('off-a').click();r('off-b').click();r('off-sync').click();check(r('off-result').textContent.includes('дефицит')&&r('off-result').textContent.includes('600'),'ruble offline reconciliation');r('off-reset').click();check(!r('off-a').disabled,'ruble offline reset');
- route(9);check(r('earn-result').textContent.includes('25'),'ruble income calculation');
+ for(let i=0;i<40&&!rd.body.classList.contains('live-ready');i++)await tick();
+ check(rd.body.classList.contains('live-ready'),'living canvas initialized');
+ const mode=()=>r('live-stage').dataset.mode,shown=()=>rd.querySelectorAll('.live-node:not([hidden])').length;
+ const next=()=>r('r-next').click();
+ check(mode()==='start'&&shown()===0,'start with core only');next();check(mode()==='map'&&shown()===1,'adds exactly one node');next();check(mode()==='focus'&&!r('essence').hidden&&r('future').hidden,'focus essence');
+ check(r('live-world').style.transform.includes('scale(1.16)'),'camera focus');check(rd.querySelectorAll('#essence [data-live-step]').length===1,'one link visible');next();check(rd.querySelectorAll('#essence [data-live-step]').length===2,'second link added');
+ next();check(mode()==='return'&&shown()===1&&rd.querySelector('.live-node.complete'),'return preserves node');next();check(mode()==='map'&&shown()===2,'second branch added');next();check(!r('future').hidden,'future follows essence');
+ r('show-all').click();check(mode()==='overview'&&shown()===2,'map shows cumulative nodes');r('show-all').click();check(mode()==='focus','resume focus');
+ const route=(i,s=0)=>{r('live-chapters').click();rd.querySelector('[data-jump="'+i+'"]').click();for(let j=0;j<s;j++)next();};
+ route(3);for(let i=0;i<3;i++)r('wallet-action').click();check(r('wallet-balance').textContent==='650 ₽','ruble wallet purchase');r('wallet-action').click();check(r('wallet-balance').textContent==='0 ₽'&&r('bank-balance').textContent.includes('650'),'ruble wallet refund');
+ route(4,1);check(r('transfer-result').textContent.includes('750'),'ruble transfer fee');r('t-top').value='300000';r('t-top').dispatchEvent(new rw.Event('input',{bubbles:true}));check(r('transfer-result').textContent.includes('Недостаточно'),'ruble transfer limit');
+ route(5,1);check(r('business-result').textContent.includes('Не окупается'),'ruble cash comparison');const old=r('business-result').textContent;r('b-period').value='2026';r('b-period').dispatchEvent(new rw.Event('change',{bubbles:true}));check(old!==r('business-result').textContent,'ruble business tariff year');
+ r('b-ticket').value='-1';r('b-ticket').dispatchEvent(new rw.Event('input',{bubbles:true}));check(r('business-result').textContent.includes('Некорректный'),'ruble invalid input');r('b-ticket').value='1500';r('b-ticket').dispatchEvent(new rw.Event('input',{bubbles:true}));r('show-all').click();r('show-all').click();check(r('b-period').value==='2026','calculator state retained');
+ route(7,1);for(let i=0;i<4;i++)r('flow-next').click();check(rd.querySelectorAll('[data-flow].lit').length===4,'ruble payment path');
+ route(8,1);r('off-a').click();r('off-b').click();r('off-sync').click();check(r('off-result').textContent.includes('дефицит')&&r('off-result').textContent.includes('600'),'ruble offline reconciliation');r('off-reset').click();check(!r('off-a').disabled,'ruble offline reset');
+ route(9,1);check(r('earn-result').textContent.includes('25'),'ruble income calculation');
  route(11);r('plan-0').click();check(r('plan-progress').textContent.startsWith('1 из 5'),'ruble personal plan');
- r('show-all').click();check(rd.querySelectorAll('[data-chapter]:not([hidden])').length===12&&r('progress-label').textContent==='12 / 12','ruble full overview');
- for(const width of [320,390,768,1024,1440]){rr.width=String(width);await tick();await tick();check(rd.documentElement.scrollWidth<=rr.clientWidth+2,'ruble overflow '+width);}
- r('show-all').click();check(rd.querySelectorAll('[data-chapter]:not([hidden])').length===1,'ruble restore step mode');
- check(rd.querySelectorAll('[data-faq-item]').length===51,'integrated question count');check([...rd.querySelectorAll('[data-faq-item]')].every(q=>q.closest('[data-chapter]')&&q.closest('[data-question-branch]')),'all questions nested');r('question-index').open=true;r('faq-search').value='айфон';r('faq-search').dispatchEvent(new rw.Event('input',{bubbles:true}));check(r('question-results').querySelector('a[href="#q-ios"]')&&!r('question-results').querySelector('a[href="#q-pension"]'),'integrated question synonym search');r('question-results').querySelector('a[href="#q-ios"]').click();check(!r('engineering').hidden&&r('q-ios').open&&r('q-ios').closest('[data-question-branch]').open,'search opens corresponding chapter and branch');r('faq-search').value='несуществующийвопрос';r('faq-search').dispatchEvent(new rw.Event('input',{bubbles:true}));check(!r('faq-empty').hidden,'integrated search empty');r('faq-clear').click();check(r('question-results').children.length===51,'integrated search reset');route(0);check(r('essence').querySelectorAll('details.r-step[open]').length===2,'questions do not destroy earlier state');
- const ff=document.createElement('iframe');ff.title='Legacy question link';ff.width='1280';ff.height='900';ff.src='ruble/questions/index.html#q-freeze';document.body.append(ff);for(let i=0;i<60&&!ff.contentDocument?.getElementById('q-freeze')?.open;i++)await tick();const fd=ff.contentDocument;check(fd.getElementById('q-freeze')?.open&&!fd.getElementById('risks').hidden,'legacy link redirects to exact question');
- for(const width of [320,390,768,1024,1440]){rr.width=String(width);await tick();check(rd.documentElement.scrollWidth<=rr.clientWidth+2,'integrated questions overflow '+width);}
+ next();next();next();check(mode()==='final'&&shown()===12,'final whole map');
+ check(rd.querySelectorAll('[data-faq-item]').length===51,'integrated questions preserved');rd.querySelector('a[href="#question-index"]').click();check(r('live-dialog').open,'search dialog');
+ r('faq-search').value='айфон';r('faq-search').dispatchEvent(new rw.Event('input',{bubbles:true}));check(r('question-results').querySelector('a[href="#q-ios"]')&&!r('question-results').querySelector('a[href="#q-pension"]'),'question synonym search');r('question-results').querySelector('a[href="#q-ios"]').click();check(!r('engineering').hidden&&r('q-ios').open&&r('engineering').querySelector('.live-lens-head h3').textContent.includes('iPhone'),'question opens in same canvas');
+ next();check(!r('engineering').hidden,'return to chain');route(0);check(rd.querySelectorAll('#essence [data-live-step]').length===2,'earlier chain retained');
+ rd.querySelector('a[href="#sources"]').click();check(r('live-dialog').open&&r('live-dialog-body').contains(r('sources')),'source panel');r('live-dialog-close').click();await tick();
+ const ff=document.createElement('iframe');ff.title='Legacy question link';ff.width='1280';ff.height='900';ff.src='ruble/questions/index.html#q-freeze';document.body.append(ff);for(let i=0;i<60&&!ff.contentDocument?.getElementById('q-freeze')?.open;i++)await tick();const fd=ff.contentDocument;check(fd.getElementById('q-freeze')?.open&&!fd.getElementById('risks').hidden,'legacy link reaches question');
+ for(const width of [320,390,768,1024,1440]){rr.width=String(width);await tick();await tick();check(rd.documentElement.scrollWidth<=rr.clientWidth+2,'canvas overflow '+width);const lens=rd.querySelector('#essence .live-lens').getBoundingClientRect(),footer=r('r-navigation').getBoundingClientRect();check(lens.width>0&&lens.height>0&&lens.right<=rr.clientWidth+2&&lens.bottom<=footer.top+2,'focus panel visible '+width);r('show-all').click();await tick();check(mode()==='overview','overview '+width);check(rd.documentElement.scrollWidth<=rr.clientWidth+2,'overview overflow '+width);r('show-all').click();}
  out.textContent='PASS: portal browser interactions, five-width visual geometry, focus and contrast';
 }
 frame.addEventListener('load',()=>run().catch(e=>out.textContent='FAIL: '+e.message),{once:true});
