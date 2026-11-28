@@ -1,4 +1,4 @@
-import {VERSION,BASE,resources,projects,categoryNames,selectResources} from './content.mjs';
+import {VERSION,BASE,resources,projects,categoryNames,selectResources,researchPublications,recentResearch} from './content.mjs';
 import {realReturn,reserveCalc} from './calculations.mjs';
 import {previews} from './previews.mjs';
 const $=id=>document.getElementById(id);
@@ -30,7 +30,7 @@ function itemCard(item,isProject=false){
  const card=el('article',undefined,isProject?'project':'resource');const key=isProject?projectKeys[projects.indexOf(item)]:item.category;
  card.dataset.kind=key;const head=el('div',undefined,'card-top');head.append(glyph(key),el('span',isProject?item.status:categoryNames[item.category],'micro'));card.append(head);
  const title=el('h3'),description=el('p');highlight(title,item.title,isProject?'':$('search').value);highlight(description,item.description,isProject?'':$('search').value);card.append(title,description);
- if(item.page&&!isProject){const actions=el('div',undefined,'card-actions');const a=el('a','Открыть исследование ↗','direct-research');a.href=item.page;const q=el('a','Вопросы и ответы ↗');q.href=item.questions;actions.append(a,q);card.append(actions);return card;}
+ if(item.page&&!isProject){const actions=el('div',undefined,'card-actions');const a=el('a','Открыть исследование ↗','direct-research');a.href=item.page;const q=el('a','Найти вопрос ↗');q.href=item.questions;actions.append(a,q);card.append(actions);return card;}
  const link=el('a',isProject?'Подробнее ↗':'Оригинал ↗');link.href=BASE+item.path;link.setAttribute('aria-label',item.title+' — открыть материал на GitHub');
  const actions=el('div',undefined,'card-actions');if(!isProject&&typeof reader.showModal==='function'){const button=el('button','Читать','reader-open');button.type='button';button.setAttribute('aria-label','Читать: '+item.title);button.addEventListener('click',()=>openReader(item,button));actions.append(button);}actions.append(link);card.append(actions);return card;
 }
@@ -55,6 +55,9 @@ $('project-count').textContent=projects.length+' инициатив';
 $('version').textContent=VERSION;
 $('project-grid').replaceChildren(...projects.map(item=>itemCard(item,true)));
 renderLibrary();
+function publicationCard(item,index){const article=el('article',undefined,'research-entry');const glyph=el('span',String(index+1).padStart(2,'0'),'research-glyph');glyph.setAttribute('aria-hidden','true');article.append(glyph);const copy=el('div');const date=item.date.split('-').reverse().join('.');const meta=el('p',item.category.toUpperCase()+' · ','micro');const time=el('time',date);time.dateTime=item.date;meta.append(time);copy.append(meta,el('h3',item.title),el('p',item.description));const link=el('a','Открыть исследование ↗','button primary');link.href=item.page;article.append(copy,link);return article;}
+$('research-catalog').replaceChildren(...recentResearch(researchPublications.length).map(publicationCard));
+$('research-feed').replaceChildren(...recentResearch(3).map(publicationCard));
 function paintChart(id,items,format,note,outcome){
  const max=Math.max(1e-12,...items.map(item=>item[1]));
  for(const [key,value] of items){$(id+'-'+key+'-value').textContent=format(value);$(id+'-'+key+'-bar').style.width=(100*Math.max(0,value)/max)+'%';}
@@ -95,7 +98,7 @@ motion.addEventListener('click',()=>motionState(document.documentElement.dataset
 preference.addEventListener('change',event=>motionState(event.matches));
 
 // Enhance the four native links only after JavaScript initializes.
-const coreModules=[{"id":"research","name":"Исследования","label":"RESEARCH / 01","desc":"Факты, первоисточники и проверяемые финансовые гипотезы.","cta":"Открыть библиотеку"},{"id":"practice","name":"Практикум","label":"PRACTICE / 02","desc":"Сценарии, расчёты и финансовые решения на конкретных числах.","cta":"Перейти к расчётам"},{"id":"projects","name":"Эксперименты","label":"EXPERIMENTS / 03","desc":"Игровые форматы, исследования и совместные технологические проекты.","cta":"Посмотреть инициативы"},{"id":"community","name":"Сообщество","label":"COMMUNITY / 04","desc":"Встречи, открытые обсуждения и совместная работа участников.","cta":"Присоединиться"}];
+const coreModules=[{"id":"research","name":"Исследования","label":"RESEARCH / 01","desc":"Факты, первоисточники и проверяемые финансовые гипотезы.","cta":"Открыть исследования"},{"id":"practice","name":"Практикум","label":"PRACTICE / 02","desc":"Сценарии, расчёты и финансовые решения на конкретных числах.","cta":"Перейти к расчётам"},{"id":"projects","name":"Эксперименты","label":"EXPERIMENTS / 03","desc":"Игровые форматы, исследования и совместные технологические проекты.","cta":"Посмотреть инициативы"},{"id":"community","name":"Сообщество","label":"COMMUNITY / 04","desc":"Встречи, открытые обсуждения и совместная работа участников.","cta":"Присоединиться"}];
 const coreButtons=[];
 function selectCore(id){
  const module=coreModules.find(item=>item.id===id);if(!module)return;
