@@ -39,21 +39,19 @@ export function initResearchRoute({summaries=[]}={}){
  data.forEach((d,i)=>{
   const c=d.chapter,store=make('div','live-store');store.hidden=true;for(const child of [...c.children])store.append(child);c.append(store);
   const context=make('div','live-context');context.append(make('p','micro','ВЕТКА '+String(i+1).padStart(2,'0')),make('h2','',d.title),make('p','',d.lead));d.context=context;c.append(context);
-  const chain=make('div','live-chain'),lens=make('div','live-lens'),lensHead=make('div','live-lens-head'),lensBody=make('div','live-lens-body');lens.append(lensHead,lensBody);c.append(chain,lens);Object.assign(d,{store,chain,lens,lensHead,lensBody});
+  const chain=make('div','live-chain'),lens=make('div','live-lens'),lensHead=make('div','live-lens-head'),lensBody=make('div','live-lens-body');lens.append(lensHead,lensBody);c.append(chain,lens);Object.assign(d,{store,chain,lens,lensHead,lensBody,links:new Map()});
  });
  function restore(){if(mounted){mounted.parent.append(mounted.body);mounted=null;}}
  function mount(item,d){restore();mounted={body:item.body,parent:item.node};d.lensBody.append(item.body);}
  function clearLens(d){restore();d.lensHead.replaceChildren();d.lensBody.replaceChildren();d.lensBody.scrollTop=0;}
  function titleFor(d,kind,title){d.lensHead.append(make('p','micro',kind),make('h3','',title));}
- function scrollChain(d){const active=d.chain.querySelector('[aria-current=true]');if(active){const r=active.getBoundingClientRect(),p=d.chain.getBoundingClientRect();if(r.left<p.left||r.right>p.right||r.top<p.top||r.bottom>p.bottom)active.scrollIntoView({block:'nearest',inline:'nearest'});}}
+ function scrollChain(d){const active=d.chain.querySelector('[aria-current=true]');if(active){const r=active.getBoundingClientRect(),p=d.chain.getBoundingClientRect();if(r.left<p.left)d.chain.scrollLeft+=r.left-p.left;else if(r.right>p.right)d.chain.scrollLeft+=r.right-p.right;if(r.top<p.top)d.chain.scrollTop+=r.top-p.top;else if(r.bottom>p.bottom)d.chain.scrollTop+=r.bottom-p.bottom;}}
  function renderFocus(f){
-  const d=data[f.b];clearLens(d);d.chain.replaceChildren();
+  const d=data[f.b];clearLens(d);
   const shown=session.revealed[f.b];
-  d.steps.forEach((s,i)=>{
-   if(!shown.has(i)){const n=make('div','live-link pending');n.append(make('span','live-link-index',String(i+1).padStart(2,'0')),make('span','','Следующее звено'));d.chain.append(n);return}
-   const n=button('live-link','',()=>jump(f.b,i));n.dataset.liveStep=String(i);n.append(make('span','live-link-index',String(i+1).padStart(2,'0')),make('span','',s.title));if(!question&&!questionList&&i===f.s)n.setAttribute('aria-current','true');d.chain.append(n);
-  });
-  const qbutton=button('live-link live-question-link','',()=>{question=null;questionList=true;render();});qbutton.append(make('span','live-link-index','?'),make('span','','Вопросы · '+d.questions.length));if(question||questionList)qbutton.setAttribute('aria-current','true');d.chain.append(qbutton);
+  if(!d.qbutton){d.steps.forEach((s,i)=>{const n=make('div','live-link pending');n.append(make('span','live-link-index',String(i+1).padStart(2,'0')),make('span','','Следующее звено'));d.chain.append(n);d.links.set(i,n);});d.qbutton=button('live-link live-question-link','',()=>{question=null;questionList=true;render();});d.qbutton.append(make('span','live-link-index','?'),make('span','','Вопросы · '+d.questions.length));d.chain.append(d.qbutton);}
+  d.steps.forEach((s,i)=>{let n=d.links.get(i);if(shown.has(i)&&!n.dataset.liveStep){const next=button('live-link','',()=>jump(f.b,i));next.dataset.liveStep=String(i);next.append(make('span','live-link-index',String(i+1).padStart(2,'0')),make('span','',s.title));n.replaceWith(next);d.links.set(i,next);n=next;}n.toggleAttribute('data-selected',!question&&!questionList&&i===f.s);if(!question&&!questionList&&i===f.s)n.setAttribute('aria-current','true');else n.removeAttribute('aria-current');});
+  if(question||questionList)d.qbutton.setAttribute('aria-current','true');else d.qbutton.removeAttribute('aria-current');
   if(question){titleFor(d,'ВОПРОС / ПОДРОБНО',question.title);d.lensHead.append(button('button secondary live-small','← Все вопросы ветки',()=>{question=null;questionList=true;render()}));question.node.open=true;question.node.closest('[data-question-branch]').open=true;mount(question,d);}
   else if(questionList){titleFor(d,'УГЛУБЛЕНИЕ / '+d.title,'Вопросы по этой связи');const list=make('div','live-question-list');d.questions.forEach(q=>list.append(button('live-question-option',q.title,()=>openQuestion(q))));d.lensBody.append(list);}
   else{const s=d.steps[f.s];s.node.open=true;titleFor(d,'ЗВЕНО '+String(f.s+1).padStart(2,'0')+' / '+d.steps.length,s.title);mount(s,d);}
@@ -65,9 +63,9 @@ export function initResearchRoute({summaries=[]}={}){
   stage.dataset.mode=mode;main.dataset.liveMode=mode;world.dataset.focus=focus?'true':'false';
   document.querySelector('.r-intro').hidden=!isStart;document.querySelector('.live-intro-right').hidden=!isStart;
   chapters.forEach((c,i)=>c.hidden=!focus||i!==f.b);
-  nodes.forEach((node,i)=>{const seen=session.visited.has(i),show=seen||final;node.hidden=!show;node.classList.toggle('revealed',show);node.classList.toggle('dim',focus&&i!==f.b);node.classList.toggle('active',i===f.b&&(focus||mode==='map'));node.classList.toggle('complete',session.complete.has(i));node.classList.toggle('unvisited',final&&!seen);node.tabIndex=show&&(!focus||i===f.b)?0:-1;node.querySelector('.live-check').textContent=session.complete.has(i)?'✓':seen?'·':'○';paths[i].classList.toggle('on',show);paths[i].classList.toggle('dim',focus&&i!==f.b);});
+  nodes.forEach((node,i)=>{const seen=session.visited.has(i),show=!isStart&&(seen||final);const entering=node.hidden&&show;node.hidden=!show;node.classList.toggle('revealed',show);node.classList.toggle('entering',entering);node.classList.toggle('dim',focus&&i!==f.b);node.classList.toggle('active',i===f.b&&(focus||mode==='map'));node.classList.toggle('complete',session.complete.has(i));node.classList.toggle('unvisited',final&&!seen);node.tabIndex=show&&(!focus||i===f.b)?0:-1;node.querySelector('.live-check').textContent=session.complete.has(i)?'✓':seen?'·':'○';paths[i].classList.toggle('on',show);paths[i].classList.toggle('dim',focus&&i!==f.b);});
   cross.forEach(({p,a,b})=>p.classList.toggle('on',!focus&&session.complete.has(a)&&session.complete.has(b)));
-  $('live-core').tabIndex=focus?-1:0;$('live-core').classList.toggle('dim',focus);
+  $('live-core').disabled=isStart;$('live-core').tabIndex=focus||isStart?-1:0;$('live-core').classList.toggle('dim',focus);
   const msg=$('live-map-message');msg.hidden=focus||isStart;msg.textContent=final?'Вся система: '+session.complete.size+' из '+data.length+' веток изучено. Откройте любой узел, чтобы вернуться к деталям.':mode==='return'?'Связь сохранена. Следующий шаг добавит новую ветку.':mode==='overview'?'Изученные связи остаются на карте. Нажмите на узел для повторного изучения.':'Добавилась новая связь: '+data[f.b].title+'.';
   if(focus)renderFocus(f);
   $('live-title').textContent=isStart?'Цифровой рубль':final?'Вся система':focus?data[f.b].title:mode==='overview'?'Общая картина':data[f.b].title;
@@ -77,7 +75,7 @@ export function initResearchRoute({summaries=[]}={}){
   $('live-count').textContent=String(session.pos+1).padStart(2,'0')+' / '+session.route.length;$('progress-label').textContent=session.visited.size+' / '+data.length+' узлов';$('live-progress').style.width=(session.pos/(session.route.length-1)*100)+'%';
   $('r-prev').disabled=session.pos===0&&!overview&&!question&&!questionList;
   $('r-next').disabled=final&&!overview;$('r-next').textContent=overview?'К шагу →':question||questionList?'К цепочке →':isStart?'Начать →':final?'Завершено':mode==='map'?'Раскрыть →':mode==='return'?'Следующая связь →':f.s===data[f.b].steps.length-1?'К общей картине →':'Следующее звено →';
-  $('show-all').setAttribute('aria-pressed',String(overview));$('show-all').textContent=overview?'К шагу':'Общая картина';geometry();
+  $('show-all').disabled=isStart;$('show-all').setAttribute('aria-pressed',String(overview));$('show-all').textContent=overview?'К шагу':'Общая картина';geometry();
  }
  function go(index){overview=false;question=null;questionList=false;const f=session.go(index);if(f.mode==='focus')updateHash('#'+data[f.b].chapter.id);else if(f.mode==='start')updateHash('');render();}
  function jump(b,s=0){go(session.focusIndex(b,s));}
@@ -85,8 +83,8 @@ export function initResearchRoute({summaries=[]}={}){
  function map(){if(session.pos===0)return;overview=!overview;question=null;questionList=false;render();}
  function openQuestion(q){const current=session.frame,b=q.b;if(current.mode!=='focus'||current.b!==b){const seen=[...session.revealed[b]];jump(b,seen.length?Math.max(...seen):0)}overview=false;question=q;questionList=false;updateHash('#'+q.node.id);render();}
  function closePanel(){if(panel){main.insertBefore(panel,dialog);panel=null;}dialogBody.replaceChildren();if(opener?.isConnected)opener.focus({preventScroll:true});opener=null;}
- dialog.addEventListener('close',closePanel);$('live-dialog-close').onclick=()=>dialog.close();
- function openPanel(title,content,isPanel=false){if(dialog.open){dialog.close();closePanel()}opener=document.activeElement;$('live-dialog-title').textContent=title;dialogBody.replaceChildren(content);if(isPanel)panel=content;dialog.showModal();$('live-dialog-close').focus();}
+ dialog.addEventListener('close',()=>{if(!dialog.open)closePanel()});$('live-dialog-close').onclick=()=>dialog.close();
+ function openPanel(title,content,isPanel=false){if(dialog.open){dialog.close();closePanel()}opener=document.activeElement;$('live-dialog-title').textContent=title;dialogBody.replaceChildren(content);if(isPanel)panel=content;dialog.showModal();dialog.scrollTop=0;$('live-dialog-close').focus();}
  function showSources(anchor){openPanel('Источники и методика',sources,true);if(anchor&&anchor!==sources.id)document.getElementById(anchor)?.scrollIntoView({block:'start'});}
  function renderQuestions(){const results=$('question-results'),found=questions.filter(q=>matches(q.text,search.value));results.replaceChildren();$('faq-count').textContent='Найдено: '+found.length+' из '+questions.length;$('faq-empty').hidden=found.length!==0;found.forEach(q=>{const a=make('a','live-question-result');a.href='#'+q.node.id;a.append(make('small','micro',data[q.b].title),make('span','',q.title));a.onclick=e=>{e.preventDefault();dialog.close();closePanel();openQuestion(q);};results.append(a)});}
  function showFinder(){renderQuestions();openPanel('Вопросы внутри живой системы',finder,true);search.focus();}
