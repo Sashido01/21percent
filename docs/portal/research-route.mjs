@@ -18,7 +18,7 @@ export function initResearchRoute({summaries=[]}={}){
   return {chapter,steps,questions,title:nodes[b].querySelector('strong').textContent,lead:chapter.querySelector('.r-chapter-lead').textContent};
  });
  const session=createResearchSession(data.map(d=>d.steps.length)),questions=data.flatMap(d=>d.questions),allQuestions=new Map(questions.map(q=>[q.node.id,q]));
- let overview=false,question=null,questionList=false,mounted=null,panel=null,opener=null;
+ let overview=false,question=null,questionList=false,mounted=null,panel=null,opener=null;const expanded=new WeakMap();
  const make=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n};
  function button(cls,txt,fn){const n=make('button',cls,txt);n.type='button';n.onclick=fn;return n;}
  const paths=[];
@@ -42,8 +42,8 @@ export function initResearchRoute({summaries=[]}={}){
   const chain=make('div','live-chain'),lens=make('div','live-lens'),lensHead=make('div','live-lens-head'),lensBody=make('div','live-lens-body');lens.append(lensHead,lensBody);c.append(chain,lens);Object.assign(d,{store,chain,lens,lensHead,lensBody,links:new Map()});
  });
  function restore(){if(mounted){mounted.parent.append(mounted.body);mounted=null;}}
- function mount(item,d){restore();mounted={body:item.body,parent:item.node};d.lensBody.append(item.body);}
- function clearLens(d){restore();d.lensHead.replaceChildren();d.lensBody.replaceChildren();d.lensBody.scrollTop=0;}
+ function mount(item,d){restore();mounted={body:item.body,parent:item.node};d.lensBody.append(item.body);if(item.body.classList.contains('r-detail')){let detail=item.body.querySelector(':scope > .rv-full');if(!detail){detail=make('details','rv-full');detail.append(make('summary','','Прочитать полное объяснение'));for(const child of [...item.body.children]){if(child.classList.contains('r-visual')||child.matches('form,.wallet-demo,.preset-row,.actions,.check-list,.flow-chain,[id$="result"],[id$="progress"]')||child.querySelector('input,button,select'))continue;detail.append(child);}item.body.append(detail);detail.addEventListener('toggle',()=>{expanded.set(item.node,detail.open);updateReadButton()});}detail.open=expanded.get(item.node)||false;}updateReadButton();}
+ function updateReadButton(){const b=$('live-read');if(!b)return;const detail=mounted?.body.querySelector(':scope > .rv-full');b.textContent=detail?.open?'Скрыть текст':'Текст';b.setAttribute('aria-expanded',String(!!detail?.open));}function showText(){const detail=mounted?.body.querySelector(':scope > .rv-full');if(detail){detail.open=!detail.open;updateReadButton();if(detail.open)detail.scrollIntoView({block:'nearest'});return;}const f=session.frame;const body=make('div','rv-reading');if(question){body.append(make('p','',question.text));}else if(f.b>=0){body.append(make('h3','',data[f.b].title),make('p','',data[f.b].lead),make('p','',summaries[f.b]||''));}else{body.append(make('p','',f.mode==='start'?document.querySelector('.r-intro').textContent.trim():$('system-summary').textContent));}openPanel('Пояснение к этапу',body);}function clearLens(d){restore();d.lensHead.replaceChildren();d.lensBody.replaceChildren();d.lensBody.scrollTop=0;}
  function titleFor(d,kind,title){d.lensHead.append(make('p','micro',kind),make('h3','',title));}
  function scrollChain(d){const active=d.chain.querySelector('[aria-current=true]');if(active){const r=active.getBoundingClientRect(),p=d.chain.getBoundingClientRect();if(r.left<p.left)d.chain.scrollLeft+=r.left-p.left;else if(r.right>p.right)d.chain.scrollLeft+=r.right-p.right;if(r.top<p.top)d.chain.scrollTop+=r.top-p.top;else if(r.bottom>p.bottom)d.chain.scrollTop+=r.bottom-p.bottom;}}
  function renderFocus(f){
@@ -67,7 +67,7 @@ export function initResearchRoute({summaries=[]}={}){
   cross.forEach(({p,a,b})=>p.classList.toggle('on',!focus&&session.complete.has(a)&&session.complete.has(b)));
   $('live-core').disabled=isStart;$('live-core').tabIndex=focus||isStart?-1:0;$('live-core').classList.toggle('dim',focus);
   const msg=$('live-map-message');msg.hidden=focus||isStart;msg.textContent=isStart?'':final?'Вся система: '+session.complete.size+' из '+data.length+' веток изучено. Откройте любой узел, чтобы вернуться к деталям.':mode==='return'?'Связь сохранена. Следующий шаг добавит новую ветку.':mode==='overview'?'Изученные связи остаются на карте. Нажмите на узел для повторного изучения.':'Добавилась новая связь: '+data[f.b].title+'.';
-  if(focus)renderFocus(f);
+  if(focus)renderFocus(f);else updateReadButton();
   $('live-title').textContent=isStart?'Цифровой рубль':final?'Вся система':focus?data[f.b].title:mode==='overview'?'Общая картина':data[f.b].title;
   $('step-label').textContent='RESEARCH / '+(focus?'РАСКРЫТИЕ СВЯЗИ':isStart?'ВСТУПЛЕНИЕ':final?'ИТОГ':'КАРТА');
   $('live-status').textContent=focus?'ЦЕПОЧКА / '+String(f.b+1).padStart(2,'0'):final?'ИТОГ':mode==='return'?'СВЯЗЬ СОХРАНЕНА':isStart?'ОДИН РУБЛЬ':'ЖИВАЯ КАРТА';
@@ -93,7 +93,7 @@ export function initResearchRoute({summaries=[]}={}){
  document.addEventListener('click',e=>{const a=e.target.closest('a[href^="#"]');if(!a)return;const id=a.hash.slice(1);if(id==='main')return;if(id==='question-index'){e.preventDefault();showFinder();}else if(id==='sources'||id.startsWith('source-')||id.startsWith('src-')){e.preventDefault();showSources(id)}else if(allQuestions.has(id)){e.preventDefault();openQuestion(allQuestions.get(id))}else if(chapters.some(c=>c.id===id)){e.preventDefault();const b=chapters.findIndex(c=>c.id===id);jump(b,session.frame.b===b?Math.max(0,session.frame.s):0);}});
  nodes.forEach((n,b)=>n.onclick=()=>{if(session.frame.mode==='map'&&session.frame.b===b&&!overview){move(1);return}const seen=[...session.revealed[b]];jump(b,seen.length?Math.max(...seen):0)});
  $('live-core').onclick=map;$('show-all').onclick=map;$('r-prev').onclick=()=>move(-1);$('r-next').onclick=()=>move(1);$('live-chapters').onclick=showChapters;
- $('live-full').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.().catch(()=>{});};
+ if($('live-read')){$('live-read').hidden=false;$('live-read').onclick=showText;}$('live-full').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.().catch(()=>{});};
  search.addEventListener('input',renderQuestions);$('faq-clear').onclick=()=>{search.value='';renderQuestions();search.focus()};
  addEventListener('hashchange',followHash);addEventListener('resize',geometry);
  addEventListener('keydown',e=>{if(dialog.open||e.altKey||e.ctrlKey||e.metaKey||/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)||e.target.isContentEditable)return;if(['ArrowRight','PageDown'].includes(e.key)){e.preventDefault();move(1)}else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();move(-1)}else if(e.key.toLowerCase()==='m'||e.key.toLowerCase()==='ь'){e.preventDefault();map()}});
