@@ -68,3 +68,10 @@
 .essence-definitions{display:grid;gap:10px;margin:12px 0}.essence-definitions>div{border-left:2px solid var(--cyan);padding:4px 0 4px 12px}.essence-definitions dt{font-weight:750;color:var(--paper)}.essence-definitions dd{margin:4px 0 0}.essence-reading .evidence p{margin:6px 0 0!important}.essence-reading a{color:var(--cyan);text-decoration:underline;text-underline-offset:3px}
 @container(max-width:430px){.rv-form-row{grid-template-columns:32px minmax(0,1fr);gap:8px;padding:9px}.rv-form-title{font-size:clamp(16px,5cqi,21px)}.rv-form-where{font-size:14px}.rv-form-pay{font-size:13px}}
 @media(prefers-reduced-motion:reduce){.rv-form-row{animation:none!important}}
+
+/* Источники в пояснениях должны выглядеть как ссылки, даже без наведения. */
+.r-detail a,.faq-answer a{color:var(--cyan);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px;overflow-wrap:anywhere}
+.r-detail a:hover,.faq-answer a:hover{color:var(--signal)}
+.r-detail a:focus-visible,.faq-answer a:focus-visible{outline:2px solid var(--signal);outline-offset:3px}
+.transfer-explanation ol{margin:0 0 16px;padding-left:1.4em;display:grid;gap:8px}.transfer-sources{display:grid;gap:8px;margin-top:16px}.transfer-sources>b{font-size:.9em;color:var(--muted)}
+.r-detail .source-reference{display:block;padding:9px 12px;border:1px solid var(--control-line);border-radius:8px;background:#10232a;line-height:1.4}.r-detail .source-reference:hover{border-color:var(--signal)}
