@@ -83,6 +83,49 @@ for name in sorted(TRACKED):
                         ERRORS.append(f"{name}: external SVG reference")
         except ET.ParseError as exc:
             ERRORS.append(f"{name}: invalid XML: {exc}")
+
+# Check HTML navigation, including fragments; previous validator only inspected Markdown/SVG.
+from html.parser import HTMLParser
+from urllib.parse import urlsplit, unquote
+class Page(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.ids = set()
+        self.urls = []
+    def handle_starttag(self, tag, attrs):
+        values = dict(attrs)
+        if values.get("id"):
+            self.ids.add(values["id"])
+        for attr in ("href", "src"):
+            if values.get(attr):
+                self.urls.append(values[attr])
+pages = {}
+for name in sorted(TRACKED):
+    if name.startswith("docs/") and name.endswith(".html"):
+        page = Page()
+        page.feed((ROOT / name).read_text(encoding="utf-8"))
+        pages[name] = page
+for name, page in pages.items():
+    for url in page.urls:
+        parsed = urlsplit(url)
+        if parsed.scheme or parsed.netloc:
+            continue
+        target = (ROOT / name).parent / unquote(parsed.path) if parsed.path else ROOT / name
+        if target.is_dir():
+            target = target / "index.html"
+        try:
+            relative = target.resolve().relative_to(ROOT).as_posix()
+        except ValueError:
+            ERRORS.append(f"{name}: HTML link escapes repository: {url}")
+            continue
+        if relative not in TRACKED:
+            ERRORS.append(f"{name}: unresolved HTML link: {url}")
+        elif parsed.fragment and relative in pages and unquote(parsed.fragment) not in pages[relative].ids:
+            redirects = {"docs/ruble/detail.html", "docs/ruble/questions/index.html"}
+            if relative not in redirects or unquote(parsed.fragment) not in pages["docs/ruble/index.html"].ids:
+                ERRORS.append(f"{name}: unresolved HTML fragment: {url}")
+print(f"Checked {len(pages)} HTML pages, {sum(len(p.urls) for p in pages.values())} href/src references")
+
 try:
     version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
     if not re.fullmatch(r"\d+\.\d+\.\d+", version):
