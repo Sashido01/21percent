@@ -75,3 +75,6 @@
 .r-detail a:focus-visible,.faq-answer a:focus-visible{outline:2px solid var(--signal);outline-offset:3px}
 .transfer-explanation ol{margin:0 0 16px;padding-left:1.4em;display:grid;gap:8px}.transfer-sources{display:grid;gap:8px;margin-top:16px}.transfer-sources>b{font-size:.9em;color:var(--muted)}
 .r-detail .source-reference{display:block;padding:9px 12px;border:1px solid var(--control-line);border-radius:8px;background:#10232a;line-height:1.4}.r-detail .source-reference:hover{border-color:var(--signal)}
+
+/* Вопрос: короткий ответ остаётся один, ссылки читаемы без наведения. */
+.live-question-brief + .live-text-disclosure .faq-short{display:none}.live-lens-body{overflow-anchor:none}.faq-cites a[data-source-id]{display:inline;line-height:1.55}.faq-cites b{color:var(--paper)}.faq-links{flex-wrap:wrap}.faq-links .question-permalink{overflow-wrap:anywhere}.source-highlight{outline:2px solid var(--signal);outline-offset:3px;background:#19343b}
