@@ -54,3 +54,17 @@
 @container(max-width:430px){.rv-flow .rv-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.rv-flow .rv-arrow{display:none}.rv-flow .rv-tile{min-height:92px;gap:5px;padding:8px}.rv-flow .rv-icon{width:33px}.rv-value{font-size:clamp(17px,5cqi,26px)}.rv-metrics .rv-body{grid-template-columns:repeat(2,minmax(0,1fr))}.rv-transfer .rv-tile{min-height:120px}.rv-fork .rv-body{grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr)}.rv-branch-line{grid-template-columns:10px minmax(0,1fr)}.rv-branch-line .rv-icon{width:23px}.rv-branch-line .rv-tile{grid-template-columns:24px minmax(0,1fr);gap:2px 5px}}
 @media(max-width:760px){.live-header .live-actions{justify-content:flex-start}.live-actions .button{flex:0 0 auto;min-height:44px}.research-visual{min-height:0;padding:12px;gap:10px}.rv-note{font-size:14px}.rv-icon{width:38px}.rv-label{font-size:12px}.rv-tile{min-height:86px}.rv-timeline .rv-body{gap:11px 6px}.live-text-disclosure>summary{font-size:14px}.live-lens-body .live-text-disclosure>.r-detail,.live-lens-body .live-text-disclosure>.faq-answer{padding:10px!important}}
 @media(prefers-reduced-motion:reduce){.rv-tile,.rv-date,.rv-track i,.rv-transfer .rv-arrow{animation:none!important}}
+
+/* Сравнение форм денег: отдельные строки, без ложного впечатления о трёх остатках. */
+.rv-forms .rv-body{display:grid;grid-template-columns:1fr;gap:8px;align-content:center}
+.rv-form-row{display:grid;grid-template-columns:clamp(34px,4.2vw,56px) minmax(0,1fr);align-items:center;gap:12px;padding:12px 10px;border:1px solid #45616a;border-radius:10px 3px 10px 3px;background:linear-gradient(120deg,#203e46,#11242c);animation:rv-enter .4s both;animation-delay:var(--delay,0ms)}
+.rv-form-row .rv-icon{width:100%;max-width:56px}
+.rv-form-row:last-child{border-color:var(--signal);background:linear-gradient(120deg,#29433a,#11242c)}
+.rv-form-copy{display:grid;gap:4px;min-width:0;overflow-wrap:anywhere}
+.rv-form-title{font-size:clamp(17px,1.65vw,24px);line-height:1.15;color:var(--paper)}
+.rv-form-row:last-child .rv-form-title{color:var(--signal)}
+.rv-form-where{font-size:clamp(14px,1.25vw,18px);line-height:1.25;color:var(--paper)}
+.rv-form-pay{font-size:clamp(13px,1.1vw,16px);line-height:1.25;color:var(--muted)}
+.essence-definitions{display:grid;gap:10px;margin:12px 0}.essence-definitions>div{border-left:2px solid var(--cyan);padding:4px 0 4px 12px}.essence-definitions dt{font-weight:750;color:var(--paper)}.essence-definitions dd{margin:4px 0 0}.essence-reading .evidence p{margin:6px 0 0!important}.essence-reading a{color:var(--cyan);text-decoration:underline;text-underline-offset:3px}
+@container(max-width:430px){.rv-form-row{grid-template-columns:32px minmax(0,1fr);gap:8px;padding:9px}.rv-form-title{font-size:clamp(16px,5cqi,21px)}.rv-form-where{font-size:14px}.rv-form-pay{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.rv-form-row{animation:none!important}}
