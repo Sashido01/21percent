@@ -1,4 +1,4 @@
-export const VERSION = '0.0.26';
+export const VERSION = '0.0.27';
 export const BASE = 'https://github.com/Sashido01/21percent/blob/main/';
 export const researchPublications = [
   {
