@@ -129,9 +129,19 @@ def superseded_branch(branch, pr, open_heads, main_trees, closed_prs, tree_of, q
     try:
         if tree_of(successor["head"]["sha"]) != main_trees[merge][0] or not quality_of(merge):
             return None
-    except (subprocess.CalledProcessError, KeyError):
+    except (subprocess.CalledProcessError, KeyError, RuntimeError, HTTPError, URLError):
         return None
     return f"reviewed duplicate PR #{pr['number']} replaced by verified PR #{replacement}"
+
+def verified_commit_tree(sha):
+    """Read immutable Git object metadata, including squash heads no longer on branches."""
+    if not SHA.fullmatch(sha):
+        raise RuntimeError("Invalid commit SHA")
+    obj = api("git/commits/" + sha)
+    tree_sha = (obj.get("tree") or {}).get("sha", "")
+    if obj.get("sha") != sha or not SHA.fullmatch(tree_sha):
+        raise RuntimeError("Remote commit tree verification failed")
+    return tree_sha
 
 def current_tags():
     out = git("ls-remote", "--tags", "origin")
@@ -237,7 +247,7 @@ def main():
         reason = next((r for p in candidates if (r := eligible_branch(branch,p,open_heads,main_trees,tree,
                       lambda c: git("merge-base",c,tip)))), None)
         if not reason:
-            reason = next((r for p in candidates if (r := superseded_branch(branch,p,open_heads,main_trees,closed,tree,quality_passed))), None)
+            reason = next((r for p in candidates if (r := superseded_branch(branch,p,open_heads,main_trees,closed,verified_commit_tree,quality_passed))), None)
         if not reason:
             lines.append(f"KEEP branch {name}: no safe integration or replacement proof")
             continue

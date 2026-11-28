@@ -62,6 +62,19 @@ class MaintenanceTests(unittest.TestCase):
             successor["merged_at"]="time"
             self.branch["commit"]["sha"]="e"*40
             self.assertIsNone(decide())
+    def test_verified_commit_tree(self):
+        tree_sha="f"*40
+        with patch.object(m,"api",return_value={"sha":self.sha,"tree":{"sha":tree_sha}}) as get:
+            self.assertEqual(m.verified_commit_tree(self.sha),tree_sha)
+            get.assert_called_once_with("git/commits/"+self.sha)
+        with patch.object(m,"api",return_value={"sha":self.base,"tree":{"sha":tree_sha}}):
+            with self.assertRaises(RuntimeError):
+                m.verified_commit_tree(self.sha)
+        with patch.object(m,"api",return_value={"sha":self.sha,"tree":{"sha":"bad"}}):
+            with self.assertRaises(RuntimeError):
+                m.verified_commit_tree(self.sha)
+        with self.assertRaises(RuntimeError):
+            m.verified_commit_tree("main")
     def test_tag_states(self):
         ref="refs/tags/v0.0.12"
         self.assertEqual(m.tag_status({}, "0.0.12",self.sha),"missing")
