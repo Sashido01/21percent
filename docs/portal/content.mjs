@@ -1,6 +1,7 @@
-export const VERSION = '0.0.15';
+export const VERSION = '0.0.16';
 export const BASE = 'https://github.com/Sashido01/21percent/blob/main/';
 export const resources = [
+ {id:'ruble',category:'research',title:'Цифровой рубль: исследование и вопросы',description:'Цифровой рубль, СБП, пенсия, зарплата, комиссии, кошелёк, безопасность, бизнес и будущее.',path:'docs/ruble/index.html',page:'ruble/',questions:'ruble/questions/'},
  {id:'verify',category:'research',title:'Как проверить финансовую новость',description:'Первоисточники, даты, определения, расчёты и ограничения.',path:'research/METHOD.md'},
  {id:'template',category:'research',title:'Шаблон исследования',description:'От проверяемого утверждения до фактов, гипотез и вывода.',path:'research/TEMPLATE.md'},
  {id:'real',category:'practice',title:'Что осталось после инфляции?',description:'Номинальная и реальная доходность, покупательная способность.',path:'practice/01-real-return.md'},

@@ -4,7 +4,7 @@
 
 <a href="https://sashido01.github.io/21percent/"><img src="assets/brand/portal-entry.svg" alt="Войти в SIGNAL ROOM — библиотека, калькуляторы и проекты" width="100%"></a>
 
-**[Открыть интерактивный портал ↗](https://sashido01.github.io/21percent/)** · [О клубе](docs/ABOUT.md) · [Как участвовать](CONTRIBUTING.md)
+**[Открыть интерактивный портал ↗](https://sashido01.github.io/21percent/)** · [Цифровой рубль](docs/ruble/index.html) · [Вопросы и ответы](docs/ruble/questions/index.html) · [О клубе](docs/ABOUT.md) · [Как участвовать](CONTRIBUTING.md)
 
 </div>
 
